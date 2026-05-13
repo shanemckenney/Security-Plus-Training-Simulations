@@ -23,7 +23,7 @@ These simulations help bridge that gap by requiring students to:
 - Eliminate distractors
 - Select appropriate security controls or responses
 - Understand why an answer is correct or incorrect
-- Practice applied cybersecurity decision-making
+- Practice applied cybersecurity decision-making 
 
 ---
 
