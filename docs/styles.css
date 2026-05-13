@@ -1,0 +1,358 @@
+/* ============================================================
+   Security+ Training Simulations — Shared Stylesheet
+   Used by all simulation pages. docs/index.html is self-contained.
+   ============================================================ */
+
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent: #38bdf8;
+  --border: #e5e7eb;
+  --correct: #16a34a;
+  --incorrect: #dc2626;
+  --partial: #b45309;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.10);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at top left,  rgba(56, 189, 248, 0.15), transparent 35%),
+    radial-gradient(circle at top right, rgba(37,  99, 235, 0.20), transparent 35%),
+    var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Navigation bar ─────────────────────────────────────────── */
+.sim-nav {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sim-nav-brand {
+  color: #dbeafe;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.sim-nav-back {
+  color: #93c5fd;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.sim-nav-back:hover { color: #ffffff; }
+
+/* ── Page wrapper ───────────────────────────────────────────── */
+.sim-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 52px;
+}
+
+/* ── Simulation header ──────────────────────────────────────── */
+.sim-header {
+  margin-bottom: 28px;
+}
+
+.sim-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.sim-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Cards / sections ───────────────────────────────────────── */
+.card,
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before,
+.section::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  height: 4px; width: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+.card h2,
+.section h2 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+}
+
+/* ── Scenario box ───────────────────────────────────────────── */
+.scenario {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.scenario p { margin: 0 0 14px; line-height: 1.6; }
+.scenario p:last-of-type { margin-bottom: 0; }
+
+/* ── Forms ──────────────────────────────────────────────────── */
+label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+  color: var(--text);
+  margin-bottom: 14px;
+  cursor: pointer;
+  appearance: auto;
+}
+
+select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.radio-label,
+.check-label {
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  background: var(--primary);
+  color: #ffffff;
+}
+
+button:hover { background: var(--primary-dark); }
+
+button.secondary {
+  background: #f3f4f6;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button.secondary:hover { background: #e5e7eb; }
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 22px 0 4px;
+}
+
+/* ── Feedback ───────────────────────────────────────────────── */
+.feedback {
+  font-size: 0.9rem;
+  margin-top: 8px;
+  line-height: 1.55;
+  min-height: 1em;
+}
+
+.feedback.correct   { color: var(--correct);   font-weight: 700; }
+.feedback.incorrect { color: var(--incorrect); font-weight: 700; }
+.feedback.partial   { color: var(--partial);   font-weight: 700; }
+
+.explanation {
+  font-weight: 400;
+  color: #374151;
+  margin-top: 4px;
+}
+
+/* ── Result summary (larger grading output) ─────────────────── */
+.result {
+  margin-top: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.result .correct   { color: var(--correct); }
+.result .partial   { color: var(--partial); }
+.result .incorrect { color: var(--incorrect); }
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th {
+  background: #1e3a8a;
+  color: #ffffff;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+td {
+  border: 1px solid var(--border);
+  padding: 9px 12px;
+  text-align: center;
+  color: var(--text);
+}
+
+tr:nth-child(even) td { background: #f9fafb; }
+
+/* ── Drag-and-drop ──────────────────────────────────────────── */
+.drag-item {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: grab;
+  font-size: 0.9rem;
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.drag-item:active { cursor: grabbing; background: #dbeafe; }
+.drag-item:hover  { background: #dbeafe; }
+
+.dropzone {
+  min-height: 44px;
+  border: 2px dashed #9ca3af;
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  margin-top: 8px;
+  background: #fafafa;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.drag-over {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+/* ── Accordion (used by Host-Based IR) ──────────────────────── */
+.accordion {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: var(--text);
+  padding: 10px 14px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.accordion:hover { background: #dbeafe; }
+
+.panel {
+  display: none;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* ── Footer disclaimer ──────────────────────────────────────── */
+.sim-footer {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .sim-page  { padding: 20px 16px 40px; }
+  .sim-nav   { padding: 12px 16px; }
+  .card,
+  .section   { padding: 16px; }
+  .btn-row   { flex-direction: column; }
+  .btn-row button { width: 100%; }
+}

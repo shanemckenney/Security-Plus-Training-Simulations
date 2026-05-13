@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Remote Access Workflow – Security+ Training</title>
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <style>
+    .mode-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .mode-toggle input { cursor: pointer; }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .step {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      cursor: grab;
+      font-size: 0.88rem;
+      user-select: none;
+      transition: background 0.1s;
+    }
+
+    .step:active { cursor: grabbing; background: #dbeafe; }
+    .step:hover  { background: #dbeafe; }
+    .step code   { color: var(--primary); font-size: inherit; }
+
+    .slot {
+      border: 1px dashed #9ca3af;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      min-height: 44px;
+      font-size: 0.88rem;
+      background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+      color: var(--text);
+    }
+
+    .slot:empty::before {
+      content: "Drop step here";
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .slot code { color: var(--primary); font-size: inherit; }
+
+    .result-box {
+      display: none;
+      margin-top: 4px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .result-box.good {
+      border: 1px solid var(--correct);
+      background: #f0fdf4;
+      color: #14532d;
+    }
+
+    .result-box.bad {
+      border: 1px solid #fca5a5;
+      background: #fef2f2;
+      color: #374151;
+    }
+
+    @media (max-width: 640px) {
+      .workflow-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sim-nav" aria-label="Site navigation">
+  <span class="sim-nav-brand">Security+ Training Simulations</span>
+  <a class="sim-nav-back" href="../../">&#8592; Dashboard</a>
+</nav>
+
+<main class="sim-page">
+
+  <header class="sim-header">
+    <h1>Secure Remote Access Workflow</h1>
+    <p>Arrange the steps below in the correct order for a secure remote access process. Focus on <strong>security logic</strong>, not command memorization.</p>
+  </header>
+
+  <div id="analystFlow" class="card" style="display:none; margin-bottom:18px;">
+    <h2>Analyst Security Workflow (Practice Mode)</h2>
+    <p style="color: var(--muted); font-size: 0.9rem; margin: 0 0 6px;">General security flow to guide your thinking:</p>
+    <p style="margin: 0; font-size: 0.95rem; line-height: 1.8;">
+      Secure controls in place &rarr; User attempts access &rarr; Identity verified &rarr; Permissions enforced &rarr; Least privilege applied &rarr; Activity logged
+    </p>
+  </div>
+
+  <div class="mode-bar">
+    <label class="mode-toggle">
+      <span>Practice</span>
+      <input type="checkbox" id="modeToggle" onchange="toggleMode()" checked>
+      <span>Assessment</span>
+    </label>
+    <button class="secondary" onclick="resetSim()">Reset</button>
+    <button onclick="submitOrder()">Submit</button>
+  </div>
+
+  <div class="workflow-grid">
+    <div class="card">
+      <h2>Available Steps</h2>
+      <div id="steps"></div>
+    </div>
+    <div class="card">
+      <h2>Order the Workflow</h2>
+      <div id="slots"></div>
+    </div>
+  </div>
+
+  <div id="feedback" class="result-box"></div>
+
+  <footer class="sim-footer">
+    This simulation is instructor-designed for skills development and pattern recognition and does not represent actual exam content.
+  </footer>
+
+</main>
+
+<script>
+let mode = "Assessment";
+
+const stepsData = [
+  "Authenticate user (verify identity/credentials)",
+  "Log access attempt (audit record created)",
+  "Enable secure remote access (SSH service allowed)",
+  "Grant full permissions to all users (least privilege violation)",
+  "Enforce authorization (apply user permissions)",
+  "Initiate secure connection (ssh username@IP)",
+  "Apply least privilege (chmod 755 file permissions)"
+];
+
+const correctOrder = [
+  "Enable secure remote access (SSH service allowed)",
+  "Initiate secure connection (ssh username@IP)",
+  "Authenticate user (verify identity/credentials)",
+  "Enforce authorization (apply user permissions)",
+  "Apply least privilege (chmod 755 file permissions)",
+  "Log access attempt (audit record created)"
+];
+
+function toggleMode() {
+  const toggle = document.getElementById("modeToggle");
+  mode = toggle.checked ? "Assessment" : "practice";
+  document.getElementById("feedback").style.display = "none";
+  document.getElementById("analystFlow").style.display = mode === "practice" ? "block" : "none";
+}
+
+function resetSim() {
+  document.getElementById("feedback").style.display = "none";
+  render();
+}
+
+function render() {
+  const steps = document.getElementById("steps");
+  const slots  = document.getElementById("slots");
+  steps.innerHTML = "";
+  slots.innerHTML = "";
+
+  shuffle([...stepsData]).forEach(text => {
+    const d = document.createElement("div");
+    d.className   = "step";
+    d.draggable   = true;
+    d.innerHTML   = "<code>" + text + "</code>";
+    d.ondragstart = e => e.dataTransfer.setData("text", text);
+    steps.appendChild(d);
+  });
+
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement("div");
+    s.className  = "slot";
+    s.ondragover = e => e.preventDefault();
+    s.ondrop     = e => {
+      e.preventDefault();
+      s.innerHTML = "<code>" + e.dataTransfer.getData("text") + "</code>";
+    };
+    slots.appendChild(s);
+  }
+}
+
+function submitOrder() {
+  const slots = [...document.querySelectorAll(".slot")].map(s => s.textContent);
+  let score = 0;
+  for (let i = 0; i < correctOrder.length; i++) {
+    if (slots[i] === correctOrder[i]) score++;
+  }
+
+  const fb = document.getElementById("feedback");
+  fb.style.display = "block";
+  fb.className = "result-box " + (score === correctOrder.length ? "good" : "bad");
+
+  fb.innerHTML = `
+    <strong>Score: ${score}/${correctOrder.length}</strong><br><br>
+    <strong>Analyst Breakdown:</strong><br>
+    &bull; Secure services must be enabled before any connection can occur.<br>
+    &bull; The user must initiate a connection before identity can be verified.<br>
+    &bull; Authentication confirms who the user is.<br>
+    &bull; Authorization enforces what the user is allowed to do.<br>
+    &bull; Least privilege prevents excessive access.<br>
+    &bull; Logging ensures accountability and investigation capability.<br><br>
+    <strong>Key Takeaway:</strong><br>
+    Always think: Access path &rarr; Connection &rarr; Authentication &rarr; Authorization &rarr; Least privilege &rarr; Logging
+  `;
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+render();
+</script>
+
+</body>
+</html>

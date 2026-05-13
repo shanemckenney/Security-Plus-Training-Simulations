@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physical Security Controls – Security+ Training</title>
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <style>
+    .drag-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .location {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .location:last-child { margin-bottom: 0; }
+
+    .location strong {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .drag-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sim-nav" aria-label="Site navigation">
+  <span class="sim-nav-brand">Security+ Training Simulations</span>
+  <a class="sim-nav-back" href="../../">&#8592; Dashboard</a>
+</nav>
+
+<main class="sim-page">
+
+  <header class="sim-header">
+    <h1>Physical Security Controls</h1>
+    <p>Drag each physical security control to the most appropriate location. Some locations require multiple controls to address different threat types. Each control can only be used once.</p>
+  </header>
+
+  <div class="drag-grid">
+
+    <!-- LOCATIONS -->
+    <div class="card">
+      <h2>Facility Locations</h2>
+
+      <div class="location" data-id="1">
+        <strong>1. Main entrance to the building – ground floor</strong>
+        <div class="dropzone"></div>
+        <div id="f1" class="feedback"></div>
+      </div>
+
+      <div class="location" data-id="2">
+        <strong>2. Backup generator section</strong>
+        <div class="dropzone"></div>
+        <div id="f2" class="feedback"></div>
+      </div>
+
+      <div class="location" data-id="3">
+        <strong>3. Entrance to the server room</strong>
+        <div class="dropzone"></div>
+        <div id="f3" class="feedback"></div>
+      </div>
+
+      <div class="location" data-id="4">
+        <strong>4. Parking area – underground floor</strong>
+        <div class="dropzone"></div>
+        <div id="f4" class="feedback"></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card" id="controlsPanel">
+      <h2>Available Controls</h2>
+      <div class="drag-item" draggable="true" data-control="vestibule">Access Control Vestibule</div>
+      <div class="drag-item" draggable="true" data-control="guard">Security Officer</div>
+      <div class="drag-item" draggable="true" data-control="cctv">CCTV</div>
+      <div class="drag-item" draggable="true" data-control="bollards">Bollards</div>
+      <div class="drag-item" draggable="true" data-control="rfid">RFID Badge</div>
+      <div class="drag-item" draggable="true" data-control="biometric">Biometric Scanner</div>
+    </div>
+
+  </div>
+
+  <div class="btn-row">
+    <button onclick="checkAnswers()">Check Answers</button>
+    <button class="secondary" onclick="resetAll()">Reset</button>
+  </div>
+
+  <footer class="sim-footer">
+    Instructor-created instructional activity using generalized scenarios to reinforce physical security concepts; not representative of any certification exam content.
+  </footer>
+
+</main>
+
+<script>
+  const answerKey = {
+    1: {
+      required: 2,
+      correct: ["vestibule", "guard"],
+      why: "Main building entrances require active access control and tailgating prevention. Access control vestibules and security officers both enforce controlled entry."
+    },
+    2: {
+      required: 1,
+      correct: ["cctv"],
+      why: "Backup generators are critical infrastructure components. CCTV provides continuous monitoring and tamper detection."
+    },
+    3: {
+      required: 2,
+      correct: ["biometric", "rfid"],
+      why: "Server rooms require strong, auditable authentication. Biometrics and RFID badges restrict access to authorized personnel."
+    },
+    4: {
+      required: 1,
+      correct: ["bollards"],
+      why: "Bollards mitigate vehicle-based threats and are commonly used to prevent ramming attacks in parking areas."
+    }
+  };
+
+  let dragged = null;
+
+  document.querySelectorAll(".dropzone").forEach(zone => {
+    zone.addEventListener("dragover", e => e.preventDefault());
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      if (dragged && zone.children.length < 2) {
+        zone.appendChild(dragged);
+        dragged = null;
+      }
+    });
+  });
+
+  function initDragItems() {
+    document.querySelectorAll(".drag-item").forEach(item => {
+      item.addEventListener("dragstart", () => dragged = item);
+    });
+  }
+
+  function checkAnswers() {
+    for (let i = 1; i <= 4; i++) {
+      const zone     = document.querySelector(`.location[data-id="${i}"] .dropzone`);
+      const placed   = Array.from(zone.children).map(el => el.dataset.control);
+      const feedback = document.getElementById(`f${i}`);
+      const required = answerKey[i].required;
+      const correct  = answerKey[i].correct;
+
+      if (placed.length !== required || !correct.every(c => placed.includes(c))) {
+        feedback.innerHTML = `Incorrect.<br><span class="explanation">Required: ${correct.join(" + ").toUpperCase()}<br>${answerKey[i].why}</span>`;
+        feedback.className = "feedback incorrect";
+      } else {
+        feedback.textContent = "Correct";
+        feedback.className   = "feedback correct";
+      }
+    }
+  }
+
+  function resetAll() {
+    document.querySelectorAll(".dropzone").forEach(zone => zone.innerHTML = "");
+    document.querySelectorAll(".feedback").forEach(f => {
+      f.textContent = "";
+      f.className   = "feedback";
+    });
+
+    const panel = document.getElementById("controlsPanel");
+    panel.querySelectorAll(".drag-item").forEach(el => el.remove());
+
+    [
+      { control: "vestibule", label: "Access Control Vestibule" },
+      { control: "guard",     label: "Security Officer" },
+      { control: "cctv",      label: "CCTV" },
+      { control: "bollards",  label: "Bollards" },
+      { control: "rfid",      label: "RFID Badge" },
+      { control: "biometric", label: "Biometric Scanner" }
+    ].forEach(({ control, label }) => {
+      const d = document.createElement("div");
+      d.className       = "drag-item";
+      d.draggable       = true;
+      d.dataset.control = control;
+      d.textContent     = label;
+      panel.appendChild(d);
+    });
+
+    initDragItems();
+  }
+
+  initDragItems();
+</script>
+
+</body>
+</html>
