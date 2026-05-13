@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Secure Remote Access Workflow</title>
+
+<style>
+body{
+  background:#0f172a;
+  color:#e5e7eb;
+  font-family:Arial, sans-serif;
+  padding:20px;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+}
+h1{
+  font-size:20px;
+}
+.subtext{
+  color:#9ca3af;
+  font-size:14px;
+  margin-bottom:15px;
+}
+.mode-bar{
+  display:flex;
+  gap:15px;
+  align-items:center;
+  margin-bottom:20px;
+}
+button{
+  background:#1f2933;
+  color:#e5e7eb;
+  border:1px solid #374151;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+button:hover{background:#374151}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+.card{
+  background:#111827;
+  border:1px solid #374151;
+  border-radius:8px;
+  padding:15px;
+}
+.card h2{
+  font-size:16px;
+  margin-bottom:10px;
+}
+.step{
+  background:#1f2937;
+  border:1px solid #374151;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:8px;
+  cursor:grab;
+}
+.step:active{cursor:grabbing}
+.slot{
+  border:1px dashed #4b5563;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:8px;
+  min-height:50px;
+}
+.feedback{
+  margin-top:15px;
+  padding:12px;
+  border-radius:6px;
+  display:none;
+  line-height:1.6;
+}
+.good{border:1px solid #10b981;color:#10b981}
+.bad{border:1px solid #ef4444;color:#ef4444}
+.footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#9ca3af;
+}
+code{
+  color:#93c5fd;
+}
+.toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+}
+.toggle input{
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Secure Remote Access Workflow</h1>
+
+<p class="subtext">
+Arrange the steps below in the correct order for a secure remote access process.
+Focus on <strong>security logic</strong>, not command memorization.
+</p>
+
+<!-- Analyst Flow (Practice Mode Only) -->
+<div id="analystFlow" class="card" style="margin-bottom:20px; display:none;">
+  <h2>Analyst Security Workflow (Practice Mode)</h2>
+  <p style="color:#9ca3af;font-size:14px;">
+    General security flow to guide your thinking:
+  </p>
+  <p style="font-size:15px; line-height:1.8;">
+    Secure controls in place → User attempts access → Identity verified → Permissions enforced → Least privilege applied → Activity logged
+  </p>
+</div>
+
+<div class="mode-bar">
+
+  <div class="toggle">
+    <span>Practice</span>
+    <input type="checkbox" id="modeToggle" onchange="toggleMode()" checked>
+    <span>Assessment</span>
+  </div>
+
+  <button onclick="resetSim()">Reset</button>
+  <button onclick="submitOrder()">Submit</button>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Available Steps</h2>
+    <div id="steps"></div>
+  </div>
+
+  <div class="card">
+    <h2>Order the Workflow</h2>
+    <div id="slots"></div>
+  </div>
+</div>
+
+<div id="feedback" class="feedback"></div>
+
+<div class="footer">
+This simulation is instructor-designed for skills development and pattern recognition
+and does not represent actual exam content.
+</div>
+
+</div>
+
+<script>
+let mode = "Assessment";
+
+const stepsData = [
+  "Authenticate user (verify identity/credentials)",
+  "Log access attempt (audit record created)",
+  "Enable secure remote access (SSH service allowed)",
+  "Grant full permissions to all users (least privilege violation)",
+  "Enforce authorization (apply user permissions)",
+  "Initiate secure connection (ssh username@IP)",
+  "Apply least privilege (chmod 755 file permissions)"
+];
+
+const correctOrder = [
+  "Enable secure remote access (SSH service allowed)",
+  "Initiate secure connection (ssh username@IP)",
+  "Authenticate user (verify identity/credentials)",
+  "Enforce authorization (apply user permissions)",
+  "Apply least privilege (chmod 755 file permissions)",
+  "Log access attempt (audit record created)"
+];
+
+function toggleMode(){
+  const toggle = document.getElementById("modeToggle");
+  mode = toggle.checked ? "Assessment" : "practice";
+
+  document.getElementById("feedback").style.display="none";
+
+  const flow = document.getElementById("analystFlow");
+  flow.style.display = mode==="practice" ? "block" : "none";
+}
+
+function resetSim(){
+  document.getElementById("feedback").style.display="none";
+  render();
+}
+
+function render(){
+  const steps = document.getElementById("steps");
+  const slots = document.getElementById("slots");
+  steps.innerHTML="";
+  slots.innerHTML="";
+
+  shuffle([...stepsData]).forEach(text=>{
+    const d=document.createElement("div");
+    d.className="step";
+    d.draggable=true;
+    d.innerHTML="<code>"+text+"</code>";
+    d.ondragstart=e=>e.dataTransfer.setData("text",text);
+    steps.appendChild(d);
+  });
+
+  for(let i=0;i<6;i++){
+    const s=document.createElement("div");
+    s.className="slot";
+    s.ondragover=e=>e.preventDefault();
+    s.ondrop=e=>{
+      e.preventDefault();
+      s.innerHTML="<code>"+e.dataTransfer.getData("text")+"</code>";
+    };
+    slots.appendChild(s);
+  }
+}
+
+function submitOrder(){
+  const slots=[...document.querySelectorAll(".slot")].map(s=>s.textContent);
+  let score=0;
+  for(let i=0;i<correctOrder.length;i++){
+    if(slots[i]===correctOrder[i]) score++;
+  }
+
+  const fb=document.getElementById("feedback");
+  fb.style.display="block";
+  fb.className="feedback "+(score===correctOrder.length?"good":"bad");
+
+    fb.innerHTML = `
+    <strong>Score: ${score}/${correctOrder.length}</strong><br><br>
+
+    <strong>Analyst Breakdown:</strong><br>
+    • Secure services must be enabled before any connection can occur.<br>
+    • The user must initiate a connection before identity can be verified.<br>
+    • Authentication confirms who the user is.<br>
+    • Authorization enforces what the user is allowed to do.<br>
+    • Least privilege prevents excessive access.<br>
+    • Logging ensures accountability and investigation capability.<br><br>
+
+    <strong>Key Takeaway:</strong><br>
+    Always think: Access path → Connection → Authentication → Authorization → Least privilege → Logging
+    `;
+  }
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+render();
+</script>
+
+<footer style="margin-top:24px; font-size:12px; color:#555; text-align:center;">
+  Original, instructor-created simulation using fictional workflows to develop secure remote access reasoning; not representative of any certification exam content.
+</footer>
+
+</body>
+</html>
