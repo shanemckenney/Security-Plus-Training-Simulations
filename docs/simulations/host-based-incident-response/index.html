@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Host-Based Incident Response – Security+ Training</title>
-  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="../../styles.css">
   <style>
+    /* ── Terminal ─────────────────────────────────────────────── */
     .terminal {
       background: #0b1020;
       color: #e7e9f0;
@@ -14,12 +15,15 @@
       padding: 12px;
       height: 460px;
       overflow-y: auto;
+      overflow-x: auto;
+      white-space: pre;
       border-radius: 10px;
     }
 
     .prompt { color: #9bdcff; }
     .hr     { color: #7f89a8; }
 
+    /* ── Command input (terminal-styled) ──────────────────────── */
     #cmd {
       width: 100%;
       margin-top: 10px;
@@ -38,13 +42,15 @@
       outline-offset: 1px;
     }
 
+    /* ── Two-column grid ──────────────────────────────────────── */
     .ir-grid {
       display: grid;
-      grid-template-columns: 1fr 1.35fr;
+      grid-template-columns: 1fr 2fr;
       gap: 16px;
       margin-bottom: 16px;
     }
 
+    /* ── Controls bar ─────────────────────────────────────────── */
     .ir-controls {
       display: flex;
       gap: 10px;
@@ -59,6 +65,7 @@
       min-width: 260px;
     }
 
+    /* ── Scenario pre ─────────────────────────────────────────── */
     pre {
       white-space: pre-wrap;
       font-size: 13px;
@@ -66,6 +73,7 @@
       margin: 0;
     }
 
+    /* ── Code in feedback panels ──────────────────────────────── */
     code {
       background: #f1f3f8;
       padding: 2px 4px;
@@ -73,12 +81,14 @@
       font-size: 0.88rem;
     }
 
+    /* ── Tip text below terminal ──────────────────────────────── */
     .cmd-tip {
       font-size: 12.5px;
       color: #555;
       margin-top: 8px;
     }
 
+    /* ── Explanation container ────────────────────────────────── */
     #explanation {
       margin-top: 16px;
       padding: 14px;
@@ -182,17 +192,20 @@ const scenarioText = document.getElementById("scenarioText");
 
 let scenario = "beacon";
 
+// Scenario state flags
 let malwareRunning, fileExists, cronExists;
 let benign3341Running;
 let killedMalicious, killedBenign3341;
 let removedMaliciousFile, removedCron;
 
+// Scenario constants
 const MAL_PID = "4472";
 const BEN_PID = "3341";
 const MAL_FILE = "nightbeacon.sh";
 const CRON_FILE = "/etc/cron.d/sysupdate";
 const CRON_SCRIPT = "/usr/local/bin/sysupdate.sh";
 
+// Utility
 function print(line="") {
   terminal.innerHTML += line + "<br>";
   terminal.scrollTop = terminal.scrollHeight;
@@ -201,9 +214,11 @@ function divider(title="") {
   print(`<span class="hr">--- ${title} ---</span>`);
 }
 
+// Normalize "smart" dashes to ASCII hyphen, and normalize whitespace.
+// This fixes cases where the user types/pastes "–" or "—" and it looks like "-".
 function normalizeInput(s) {
   return (s || "")
-    .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/[‐‑‒–—−]/g, "-") // hyphen, nb-hyphen, figure dash, en dash, em dash, minus sign
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -235,6 +250,7 @@ Your objectives:
 • Stop active malicious behavior
 • Remove malicious persistence`;
   } else {
+    // Cron scenario: persistence-focused
     malwareRunning = false;
     fileExists = false;
     cronExists = true;
@@ -256,18 +272,26 @@ Your objectives:
   print("");
 }
 
+// Helper to print aligned command + description
 function printCmd(cmd, desc) {
   const PAD = 16;
+
+  // 1) Pad the raw command first
   const paddedCmd = cmd.padEnd(PAD, " ");
+
+  // 2) Escape HTML AFTER padding
   const safeCmd = paddedCmd
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/ /g, "&nbsp;");
+
   print(safeCmd + desc);
 }
 
+// Command help text (with descriptions)
 function printHelp() {
   divider("HELP");
+
   printCmd("help",        "Show available commands and their purpose");
   printCmd("netstat",     "View active network connections and associated PIDs");
   printCmd("ps aux",      "List running processes to correlate PID -> command/path");
@@ -277,21 +301,31 @@ function printHelp() {
   printCmd("history",     "Show recent command history to reconstruct what happened");
   printCmd("kill <pid>",  "Terminate a running process (stops active behavior)");
   printCmd("rm <file>",   "Remove a file (removes persistence on disk)");
+
   if (scenario === "cron") {
-    printCmd("cat /etc/cron.d/sysupdate", "View the scheduled task configuration");
+    printCmd(
+      "cat /etc/cron.d/sysupdate",
+      "View the scheduled task configuration"
+    );
   }
+
   print("");
   print("Note: Some commands provide optional context. Use them to confirm conclusions.");
 }
 
+
+// Notes under output for context commands
 function printNotes(lines) {
   divider("NOTES");
   lines.forEach(l => print(l));
   print("");
 }
 
+// Scenario outputs (ensuring >= 5 benign lines per command)
 function outputNetstat() {
   divider("NETSTAT OUTPUT");
+
+  // Always provide at least 6 benign lines
   const base = [
     "Proto  Local Address          Foreign Address         State         PID",
     "tcp    10.0.0.5:22            10.0.0.10:54122          ESTABLISHED   1120",
@@ -309,22 +343,27 @@ function outputNetstat() {
     }
     print("tcp    10.0.0.5:25            10.0.0.30:40321          ESTABLISHED   2014");
     print("tcp    10.0.0.5:389           10.0.0.40:55312          ESTABLISHED   2760");
+
     if (malwareRunning) {
       print("tcp    10.0.0.5:49632         185.71.66.12:4444        ESTABLISHED   4472");
     }
+
     print("");
+
     printNotes([
       "• Local high ports are often ephemeral source ports. They are common and not inherently malicious.",
       "• Remote port and destination context are stronger indicators than local port alone.",
       "• Use ps aux to map a suspicious PID to its command and execution location, then validate related files with ls/stat/history."
     ]);
   } else {
+    // Cron scenario: still show >= 5 additional lines
     print("tcp    10.0.0.5:8080          10.0.0.50:49321          ESTABLISHED   2402");
     print("tcp    10.0.0.5:53            10.0.0.2:53              ESTABLISHED   1510");
     print("tcp    10.0.0.5:12345         10.0.0.60:443            ESTABLISHED   3110");
     print("tcp    10.0.0.5:514           10.0.0.70:514            ESTABLISHED   1701");
     print("tcp    10.0.0.5:161           10.0.0.80:161            ESTABLISHED   1911");
     print("");
+
     printNotes([
       "• In scheduled persistence cases, the system may look normal between scheduled runs.",
       "• Shift focus from live connections to scheduled mechanisms (cron) and file artifacts (ls/stat/history).",
@@ -335,6 +374,8 @@ function outputNetstat() {
 
 function outputPsAux() {
   divider("PS AUX OUTPUT");
+
+  // Provide >= 7 benign processes
   const lines = [
     "USER   PID   %CPU  %MEM  COMMAND",
     "root   400   0.0   0.2   /usr/sbin/cron -f",
@@ -355,12 +396,14 @@ function outputPsAux() {
     } else {
       print("root   3341  0.0   0.0   [stopped] /usr/bin/curl https://api.service.com/update");
     }
+
     if (malwareRunning) {
       print("root   4472  5.6   2.4   /bin/bash /tmp/nightbeacon.sh");
     } else {
       print("root   4472  0.0   0.0   [stopped] /bin/bash /tmp/nightbeacon.sh");
     }
     print("");
+
     printNotes([
       "• ps aux links a PID to its actual command and execution path.",
       "• A shell executing a script from /tmp is higher-risk than many standard daemon paths.",
@@ -372,6 +415,7 @@ function outputPsAux() {
     print("root   3110  0.0   0.3   /usr/bin/python3 /opt/agent/checkin.py");
     print("root   3211  0.0   0.1   /usr/sbin/atd -f");
     print("");
+
     printNotes([
       "• In scheduled persistence cases, you may see the scheduler (cron) and the script it triggers.",
       "• The key question is authorization: is sysupdate.sh expected on this host, and does its schedule make sense?",
@@ -388,6 +432,7 @@ function outputId() {
   print("home=/root");
   print("umask=0022");
   print("");
+
   printNotes([
     "• This confirms privilege context. Running as root means actions and changes affect the entire system.",
     "• Elevated privilege increases the impact of unauthorized activity (system-wide persistence, config changes, log access).",
@@ -398,6 +443,8 @@ function outputId() {
 function outputLs(target="") {
   divider("LS -L OUTPUT");
   print("Permissions    Owner  Size   File");
+
+  // Always show >= 10 benign entries
   const benign = [
     "-rw-r--r--     root   4096   system.log",
     "-rw-r-----     root   2048   auth.log",
@@ -411,11 +458,15 @@ function outputLs(target="") {
     "-rwxr-xr-x     root   7168   healthcheck.sh",
     "-rw-------     root   4096   shadow.bak"
   ];
+
+  // If they specify a target, show only matching lines (more realistic), but still keep the "at least 5 outputs" requirement
+  // by printing benign list first as a "directory view" baseline.
   benign.forEach(print);
 
   if (scenario === "beacon") {
     if (fileExists) print("-rwxrwxrwx     root   20480  nightbeacon.sh");
     print("");
+
     printNotes([
       "• Look for outliers: unexpected names, executable scripts, and overly permissive modes.",
       "• Typical scripts may be executable, but world-writable executables are risky because any user/process can modify them.",
@@ -427,6 +478,7 @@ function outputLs(target="") {
       print("-rwxr-xr-x     root   1380   /usr/local/bin/sysupdate.sh");
     }
     print("");
+
     printNotes([
       "• Scheduled persistence commonly involves both a scheduler entry and the script it executes.",
       "• Validate both: schedule frequency (cat) and script trust (permissions/timestamps).",
@@ -437,11 +489,25 @@ function outputLs(target="") {
 
 function outputStat(file) {
   divider("STAT OUTPUT");
-  if (!file) { print("Usage: stat <file>"); print(""); return; }
+
+  if (!file) {
+    print("Usage: stat <file>");
+    print("");
+    return;
+  }
 
   if (scenario === "beacon") {
-    if (file !== MAL_FILE) { print(`stat: cannot stat '${file}': No such file or directory`); print(""); return; }
-    if (!fileExists) { print(`stat: cannot stat '${file}': No such file or directory`); print(""); return; }
+    if (file !== MAL_FILE) {
+      print(`stat: cannot stat '${file}': No such file or directory`);
+      print("");
+      return;
+    }
+    if (!fileExists) {
+      print(`stat: cannot stat '${file}': No such file or directory`);
+      print("");
+      return;
+    }
+
     print(`File: ${MAL_FILE}`);
     print("Size: 20480       Blocks: 48        IO Block: 4096   regular file");
     print("Device: 801h/2049d   Inode: 118392   Links: 1");
@@ -450,6 +516,7 @@ function outputStat(file) {
     print("Modify: 2025-12-29 10:16:05.000000000 -0500");
     print("Change: 2025-12-29 10:16:05.000000000 -0500");
     print("");
+
     printNotes([
       "• stat adds timeline context: Access/Modify/Change help you reason about when an artifact appeared or was altered.",
       "• The mode (0777) is a key trust signal: world-writable executables violate least privilege and increase tampering risk.",
@@ -458,8 +525,17 @@ function outputStat(file) {
     ]);
   } else {
     const allowed = [CRON_FILE, CRON_SCRIPT];
-    if (!allowed.includes(file)) { print(`stat: cannot stat '${file}': No such file or directory`); print(""); return; }
-    if (!cronExists) { print(`stat: cannot stat '${file}': No such file or directory`); print(""); return; }
+    if (!allowed.includes(file)) {
+      print(`stat: cannot stat '${file}': No such file or directory`);
+      print("");
+      return;
+    }
+    if (!cronExists) {
+      print(`stat: cannot stat '${file}': No such file or directory`);
+      print("");
+      return;
+    }
+
     print(`File: ${file}`);
     print("Size: 256         Blocks: 8         IO Block: 4096   regular file");
     print("Device: 801h/2049d   Inode: 224901   Links: 1");
@@ -468,6 +544,7 @@ function outputStat(file) {
     print("Modify: 2025-12-29 10:05:02.000000000 -0500");
     print("Change: 2025-12-29 10:05:02.000000000 -0500");
     print("");
+
     printNotes([
       "• With scheduled mechanisms, timestamps can help identify recent, potentially unauthorized changes.",
       "• If the schedule file and script were modified close together, that suggests they were introduced as a set.",
@@ -478,6 +555,8 @@ function outputStat(file) {
 
 function outputHistory() {
   divider("HISTORY OUTPUT");
+
+  // Ensure >= 6 benign lines plus scenario-specific actions
   const common = [
     "  981  cd /var/log",
     "  982  tail -n 50 system.log",
@@ -493,6 +572,7 @@ function outputHistory() {
     print("  988  chmod 777 nightbeacon.sh");
     print("  989  ./nightbeacon.sh");
     print("");
+
     printNotes([
       "• history helps reconstruct a sequence of actions leading to the current state.",
       "• Download → permission change → execution is a common chain when a script is introduced and launched.",
@@ -504,6 +584,7 @@ function outputHistory() {
     print(`  988  chmod 755 ${CRON_SCRIPT}`);
     print("  989  systemctl restart cron");
     print("");
+
     printNotes([
       "• This shows a scheduled mechanism being created and activated.",
       "• A schedule that runs every minute is high-impact and often unnecessary for legitimate maintenance.",
@@ -515,14 +596,25 @@ function outputHistory() {
 
 function outputCatCron() {
   divider("CAT OUTPUT");
-  if (scenario !== "cron") { print(`cat: ${CRON_FILE}: No such file or directory`); print(""); return; }
-  if (!cronExists) { print(`cat: ${CRON_FILE}: No such file or directory`); print(""); return; }
+  if (scenario !== "cron") {
+    print(`cat: ${CRON_FILE}: No such file or directory`);
+    print("");
+    return;
+  }
+  if (!cronExists) {
+    print(`cat: ${CRON_FILE}: No such file or directory`);
+    print("");
+    return;
+  }
+
+  // at least 5 lines
   print(`# ${CRON_FILE}`);
   print("# This file schedules a task to run periodically.");
   print(`* * * * * root ${CRON_SCRIPT}`);
   print("# m h dom mon dow user command");
   print("# end of file");
   print("");
+
   printNotes([
     "• '* * * * *' means every minute.",
     "• High-frequency scheduled execution can be legitimate in rare cases, but it is commonly abused for persistence.",
@@ -531,64 +623,117 @@ function outputCatCron() {
   ]);
 }
 
+// Actions
 function doKill(pid) {
-  if (!pid || !/^\d+$/.test(pid)) { print("Usage: kill <pid>"); print(""); return; }
+  if (!pid || !/^\d+$/.test(pid)) {
+    print("Usage: kill <pid>");
+    print("");
+    return;
+  }
 
   if (scenario === "beacon") {
     if (pid === MAL_PID) {
       if (malwareRunning) {
-        malwareRunning = false; killedMalicious = true;
+        malwareRunning = false;
+        killedMalicious = true;
         print(`Process ${MAL_PID} terminated.`);
         print("Active external communication from that process has stopped.");
         print("");
-      } else { print("Notice: That process is already stopped."); print(""); }
+      } else {
+        print("Notice: That process is already stopped.");
+        print("");
+      }
       return;
     }
+
     if (pid === BEN_PID) {
       if (benign3341Running) {
-        benign3341Running = false; killedBenign3341 = true;
+        benign3341Running = false;
+        killedBenign3341 = true;
         print(`Process ${BEN_PID} terminated.`);
         print("Connection closed. This may interrupt legitimate activity.");
         print("");
-      } else { print("Notice: That process is already stopped."); print(""); }
+      } else {
+        print("Notice: That process is already stopped.");
+        print("");
+      }
       return;
     }
-    print("Error: No such process."); print(""); return;
+
+    print("Error: No such process.");
+    print("");
+    return;
   }
 
+  // Cron scenario: kill is not the primary control mechanism here
   print("Notice: No relevant long-running malicious process identified in this scenario.");
   print("Tip: Focus on the scheduled mechanism and associated artifacts.");
   print("");
 }
 
 function doRm(target) {
-  if (!target) { print("Usage: rm <file>"); print(""); return; }
-
-  if (scenario === "beacon") {
-    if (malwareRunning) { print("Error: Stop the running malicious process before removing the file."); print(""); return; }
-    if (target === MAL_FILE && fileExists) {
-      fileExists = false; removedMaliciousFile = true;
-      print("File removed."); print(""); return;
-    }
-    print("Error: File not found."); print(""); return;
+  if (!target) {
+    print("Usage: rm <file>");
+    print("");
+    return;
   }
 
-  if (scenario === "cron") {
-    if (!cronExists) { print("Error: File not found."); print(""); return; }
-    if (target === CRON_FILE) {
-      cronExists = false; removedCron = true;
-      print("Scheduled entry removed."); print(""); return;
+  if (scenario === "beacon") {
+    // enforce sequencing
+    if (malwareRunning) {
+      print("Error: Stop the running malicious process before removing the file.");
+      print("");
+      return;
     }
-    if (target === CRON_SCRIPT) { print("Script removed."); print(""); return; }
-    print("Error: File not found."); print(""); return;
+
+    if (target === MAL_FILE && fileExists) {
+      fileExists = false;
+      removedMaliciousFile = true;
+      print("File removed.");
+      print("");
+      return;
+    }
+
+    print("Error: File not found.");
+    print("");
+    return;
+  }
+
+  // Cron scenario: containment = remove schedule entry
+  if (scenario === "cron") {
+    if (!cronExists) {
+      print("Error: File not found.");
+      print("");
+      return;
+    }
+
+    if (target === CRON_FILE) {
+      cronExists = false;
+      removedCron = true;
+      print("Scheduled entry removed.");
+      print("");
+      return;
+    }
+
+    if (target === CRON_SCRIPT) {
+      print("Script removed.");
+      print("");
+      return;
+    }
+
+    print("Error: File not found.");
+    print("");
+    return;
   }
 }
 
+// CLI router
 function runCmd() {
   const inputEl = document.getElementById("cmd");
   const raw = inputEl.value;
   inputEl.value = "";
 
+  // Normalize dashes/whitespace to prevent "looks right but doesn't match"
   const cmdRaw = normalizeInput(raw);
   if (!cmdRaw) return;
 
@@ -602,6 +747,7 @@ function runCmd() {
   if (cmdRaw === "ps aux") return outputPsAux();
   if (cmdRaw === "id") return outputId();
 
+  // Robust ls -l parsing: accept ls -l, ls -la, ls -l <path>, extra spaces, and Unicode dashes normalized earlier
   if (cmd === "ls" && parts.includes("-l")) {
     const idx = parts.indexOf("-l");
     const target = parts.slice(idx + 1).join(" ").trim();
@@ -618,6 +764,7 @@ function runCmd() {
   print("");
 }
 
+// Grading & fuller explanations
 function grade() {
   const result = document.getElementById("result");
   const explanation = document.getElementById("explanation");
@@ -764,6 +911,7 @@ function grade() {
   }
 }
 
+// Accordion behavior
 document.addEventListener("click", function(e) {
   if (e.target.classList.contains("accordion")) {
     const panel = e.target.nextElementSibling;
