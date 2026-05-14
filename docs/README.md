@@ -258,7 +258,7 @@ Because this project is cybersecurity-focused, it is built with secure developme
 
 Current safeguards include:
 
-- Static-site architecture 
+- Static-site architecture  
 - No user accounts
 - No authentication system
 - No backend database
