@@ -139,6 +139,24 @@
       white-space: pre-wrap;
       line-height: 1.7;
     }
+
+    /* ── Student Guide button ────────────────────────────────── */
+    .guide-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #f3f4f6;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+
+    .guide-btn:hover { background: #e5e7eb; }
   </style>
 </head>
 <body>
@@ -169,6 +187,7 @@
   <div class="btn-row">
     <button onclick="submitAnswers()">Submit</button>
     <button class="secondary" onclick="resetAnswers()">Reset</button>
+    <a href="student-guide.pdf" target="_blank" class="guide-btn">📄 Student Guide</a>
   </div>
 
   <footer class="sim-footer">
