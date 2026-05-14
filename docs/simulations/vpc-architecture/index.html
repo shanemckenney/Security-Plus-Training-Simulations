@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VPC Architecture – Security+ Training</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <style>
+    /* ── Wider page for this simulation ──────────────────────── */
+    .sim-page { max-width: 1100px; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .vpc-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+    }
+
+    /* ── Legend panel ────────────────────────────────────────── */
+    .legend-panel {
+      flex-shrink: 0;
+      width: 200px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .legend-panel::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      height: 4px; width: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .legend-panel h2 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+
+    /* ── Draggable items (legend + inside dropzones) ──────────── */
+    .draggable {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      cursor: grab;
+      font-size: 0.88rem;
+      user-select: none;
+      text-align: center;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .draggable:hover  { background: #dbeafe; }
+    .draggable:active { cursor: grabbing; background: #dbeafe; }
+
+    /* ── Diagram outer wrapper ───────────────────────────────── */
+    .diagram-wrapper {
+      flex-shrink: 0;
+      padding: 8px;
+      background: #b0cbe3;
+      border: 3px solid #2980b9;
+      border-radius: 14px;
+      display: inline-block;
+      position: relative;
+    }
+
+    #overlay-arrow {
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    /* ── Main diagram canvas ─────────────────────────────────── */
+    .network-diagram {
+      width: 750px;
+      height: 480px;
+      background: #d6e9ff;
+      border: 2px solid #2980b9;
+      border-radius: 10px;
+      position: relative;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+    }
+
+    /* ── Subnet lanes ────────────────────────────────────────── */
+    .subnet-box {
+      position: absolute;
+      width: 700px;
+      height: 100px;
+      left: 25px;
+      background: #f0f8ff;
+      border: 2px dashed #5dade2;
+      border-radius: 8px;
+      padding: 50px;
+      box-sizing: border-box;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .subnet-label,
+    #subnet-select {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    #subnet-select {
+      font-weight: normal;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      background: #fff;
+      margin-bottom: 0;
+      width: auto;
+    }
+
+    #public-subnet  { top: 50px;  }
+    #middle-subnet  { top: 210px; }
+    #private-subnet { top: 330px; }
+
+    /* ── Drop zones ──────────────────────────────────────────── */
+    .dropzone {
+      width: 140px;
+      height: 34px;
+      border-radius: 6px;
+      border: 2px dashed #aaa;
+      background: #ffffff;
+      text-align: center;
+      font-size: 15px;
+      color: #666;
+      position: absolute;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .dropzone:hover   { border-color: var(--primary); background: #eff6ff; }
+    .dropzone.locked  { border-color: #ccc; background: #f4f4f4; cursor: not-allowed; }
+
+    .dropzone .draggable {
+      width: 100%; height: 100%;
+      margin: 0; padding: 0;
+      background: none; border: none;
+      box-shadow: none;
+      font-size: 14px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dropzone positions (pixel-exact — do not change) */
+    #dz1 { top: -25px;  left: 305px; }
+    #dz2 { top: 85px;   left: 180px; }
+    #dz3 { top: 85px;   left: 420px; }
+    #dz4 { top: 165px;  left: 305px; }
+    #dz5 { top: 255px;  left: 150px; }
+    #dz6 { top: 255px;  left: 305px; }
+    #dz7 { top: 255px;  left: 460px; }
+    #dz8 { top: 370px;  left: 305px; }
+
+    /* ── Side labels (Internet Gateway / VPC) ────────────────── */
+    .internet-gateway, .vpc-box {
+      position: absolute;
+      top: 160px;
+      width: 90px;
+      height: 40px;
+      background: #ffffff;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      color: #2c3e50;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .internet-gateway { right: -40px; }
+    .vpc-box          { left:  -40px; }
+
+    /* ── Score modal ─────────────────────────────────────────── */
+    .score-overlay {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .score-modal {
+      background: var(--card);
+      margin: 8% auto;
+      border-radius: var(--radius);
+      width: 88%;
+      max-width: 620px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+      overflow: hidden;
+    }
+
+    .score-modal-header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #dbeafe;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .score-close {
+      color: #93c5fd;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.1rem;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .score-close:hover { color: #ffffff; background: none; }
+
+    .score-modal-body {
+      padding: 20px;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    #modal-content h3     { margin-top: 0; font-size: 1rem; }
+    #modal-content ul     { padding-left: 18px; margin: 10px 0; }
+    #modal-content li     { margin-bottom: 8px; font-size: 0.88rem; line-height: 1.5; }
+    #modal-content strong { font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+
+<nav class="sim-nav" aria-label="Site navigation">
+  <span class="sim-nav-brand">Security+ Training Simulations</span>
+  <a class="sim-nav-back" href="../../">&#8592; Dashboard</a>
+</nav>
+
+<main class="sim-page">
+
+  <header class="sim-header">
+    <h1>VPC Architecture</h1>
+    <p>Drag each cloud component from the <strong>Legend</strong> into the correct drop zone in the network diagram. Use the dropdown in the middle subnet to identify its type. Once placed, components are locked. Fill all drop zones before submitting.</p>
+  </header>
+
+  <div class="vpc-layout">
+
+    <!-- Legend -->
+    <div class="legend-panel">
+      <h2>Legend</h2>
+      <div id="legend-items"></div>
+    </div>
+
+    <!-- Diagram -->
+    <div class="diagram-wrapper">
+      <!-- Arrow overlay (SVG) -->
+      <svg id="overlay-arrow" width="750" height="480">
+        <defs>
+          <marker id="arrowhead"       markerWidth="4" markerHeight="3" refX="2"   refY="1.5" orient="auto">
+            <polygon points="0 0, 4 1.5, 0 3" fill="orange" />
+          </marker>
+          <marker id="arrowhead-left"  markerWidth="4" markerHeight="3" refX="4"   refY="1.5" orient="auto">
+            <polygon points="4 0, 0 1.5, 4 3" fill="orange" />
+          </marker>
+          <marker id="arrowhead-right" markerWidth="4" markerHeight="3" refX="4"   refY="1.5" orient="0">
+            <polygon points="0 0, 4 1.5, 0 3" fill="orange" />
+          </marker>
+          <marker id="arrowhead-up"    markerWidth="4" markerHeight="3" refX="2"   refY="1.5" orient="270">
+            <polygon points="0 0, 4 1.5, 0 3" fill="orange" />
+          </marker>
+          <marker id="arrowhead-down"  markerWidth="4" markerHeight="3" refX="2"   refY="1.5" orient="90">
+            <polygon points="0 0, 4 1.5, 0 3" fill="orange" />
+          </marker>
+        </defs>
+        <path d="M250,90 V10 H310"  stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+        <path d="M520,90 V10 H465" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+        <line x1="347" y1="112" x2="428" y2="112" stroke="orange" stroke-width="3"
+              marker-start="url(#arrowhead-left)" marker-end="url(#arrowhead-right)" />
+        <line x1="383" y1="221" x2="383" y2="257" stroke="orange" stroke-width="3"
+              marker-start="url(#arrowhead-up)" marker-end="url(#arrowhead-down)" />
+        <path d="M250,260 V200 H310" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+        <path d="M520,260 V200 H465" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+        <line x1="383" y1="312" x2="383" y2="372" stroke="orange" stroke-width="3"
+              marker-start="url(#arrowhead-up)" marker-end="url(#arrowhead-down)" />
+        <path d="M577,115 H630 V190 H700" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrowhead-right)" />
+      </svg>
+
+      <div class="network-diagram">
+        <div class="subnet-box" id="public-subnet">
+          <div class="subnet-label">Public Subnet</div>
+        </div>
+        <div class="subnet-box" id="middle-subnet">
+          <select id="subnet-select">
+            <option>Select Subnet</option>
+            <option>Public Subnet</option>
+            <option>Private Subnet</option>
+          </select>
+        </div>
+        <div class="subnet-box" id="private-subnet">
+          <div class="subnet-label">Private Subnet</div>
+        </div>
+
+        <div id="dz1" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz2" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz3" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz4" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz5" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz6" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz7" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+        <div id="dz8" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">?</div>
+
+        <div class="internet-gateway">🌐 Internet Gateway</div>
+        <div class="vpc-box">☁️ VPC</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="btn-row">
+    <button onclick="submitAnswers()">Submit</button>
+    <button class="secondary" onclick="resetActivity()">Reset</button>
+  </div>
+
+  <footer class="sim-footer">
+    Instructor-created cloud architecture simulation using a generalized VPC layout for skills development; not representative of any certification exam content.
+  </footer>
+
+</main>
+
+<!-- ── Score Modal ────────────────────────────────────────────── -->
+<div id="score-modal" class="score-overlay">
+  <div class="score-modal">
+    <div class="score-modal-header">
+      <span>Assessment Results</span>
+      <button class="score-close" onclick="document.getElementById('score-modal').style.display='none'">✖</button>
+    </div>
+    <div class="score-modal-body">
+      <div id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const correctAnswers = {
+    dz1:      'WAF',
+    dz2:      'LB',
+    dz3:      'LB',
+    dz4:      'Autoscaling',
+    dz5:      'Instance',
+    dz6:      'Instance',
+    dz7:      'Instance',
+    dz8:      'Database',
+    dropdown: 'Private Subnet'
+  };
+
+  const components = [
+    { id: 'WAF',        label: '🛡️ WAF' },
+    { id: 'LB',         label: '🔀 Load Balancer' },
+    { id: 'Autoscaling',label: '⚙️ Autoscaling' },
+    { id: 'Instance',   label: '💻 Instance' },
+    { id: 'Database',   label: '🗄️ Database' }
+  ];
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function renderLegend() {
+    const container = document.getElementById('legend-items');
+    container.innerHTML = '';
+    const shuffled = [...components];
+    shuffleArray(shuffled);
+    shuffled.forEach(item => {
+      const div        = document.createElement('div');
+      div.id           = item.id;
+      div.className    = 'draggable';
+      div.draggable    = true;
+      div.ondragstart  = drag;
+      div.innerText    = item.label;
+      container.appendChild(div);
+    });
+  }
+
+  function allowDrop(ev) { ev.preventDefault(); }
+  function drag(ev)      { ev.dataTransfer.setData("text", ev.target.id); }
+
+  function drop(ev) {
+    ev.preventDefault();
+    const data       = ev.dataTransfer.getData("text");
+    const dropTarget = ev.target;
+
+    if (dropTarget.classList.contains('dropzone') && dropTarget.children.length === 0) {
+      const dragged       = document.getElementById(data).cloneNode(true);
+      dragged.draggable   = false;
+      dragged.className   = 'draggable';
+      dragged.id          = data + "-dropped-" + dropTarget.id;
+      dropTarget.innerHTML = "";
+      dropTarget.appendChild(dragged);
+      dropTarget.classList.add('locked');
+      dropTarget.ondrop     = null;
+      dropTarget.ondragover = null;
+    }
+  }
+
+  function submitAnswers() {
+    const explanationMap = {
+      dz1:      'WAF is placed in front of the load balancers to filter malicious traffic before it enters the infrastructure.',
+      dz2:      'Load Balancer distributes traffic to instances in the autoscaling group.',
+      dz3:      'Load Balancer distributes traffic to instances in the autoscaling group.',
+      dz4:      'Autoscaling adjusts the number of running instances based on demand.',
+      dz5:      'Instances host applications or services and reside in the private subnet for security.',
+      dz6:      'Instances host applications or services and reside in the private subnet for security.',
+      dz7:      'Instances host applications or services and reside in the private subnet for security.',
+      dz8:      'Database should be placed in the deepest layer (private subnet) for maximum isolation.',
+      dropdown: 'The middle subnet should be Private since it contains autoscaling and application instances.'
+    };
+
+    let score = 0;
+    let resultHTML = '<h3>Results</h3><ul>';
+
+    for (let i = 1; i <= 8; i++) {
+      const dz      = document.getElementById(`dz${i}`);
+      const child   = dz.firstChild;
+      const correct = correctAnswers[`dz${i}`];
+      const matched = child && child.id && child.id.startsWith(correct);
+      if (matched) score++;
+      resultHTML += `<li><strong>Zone ${i}</strong>: ${matched ? '✅' : '❌'} — ${explanationMap[`dz${i}`]}</li>`;
+    }
+
+    const dropdown        = document.getElementById('subnet-select');
+    const matchedDropdown = dropdown.value === correctAnswers.dropdown;
+    if (matchedDropdown) score++;
+    resultHTML += `<li><strong>Middle Subnet Dropdown</strong>: ${matchedDropdown ? '✅' : '❌'} — ${explanationMap.dropdown}</li>`;
+    resultHTML += `</ul><p><strong>Final Score: ${score}/9</strong></p>`;
+
+    document.getElementById('modal-content').innerHTML = resultHTML;
+    document.getElementById('score-modal').style.display = 'block';
+  }
+
+  function resetActivity() {
+    for (let i = 1; i <= 8; i++) {
+      const dz      = document.getElementById(`dz${i}`);
+      dz.innerHTML  = '?';
+      dz.classList.remove('locked');
+      dz.ondrop     = drop;
+      dz.ondragover = allowDrop;
+    }
+    document.getElementById('subnet-select').selectedIndex = 0;
+    document.getElementById('score-modal').style.display   = 'none';
+    renderLegend();
+  }
+
+  window.onload = renderLegend;
+</script>
+
+</body>
+</html>

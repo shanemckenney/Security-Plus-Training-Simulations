@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site-to-Site VPN Configuration – Security+ Training</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <style>
+    /* ── Diagram ─────────────────────────────────────────────── */
+    .diagram { text-align: center; margin-bottom: 4px; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .clickable { cursor: pointer; }
+    .clickable rect { transition: fill 0.15s; }
+    .clickable:hover rect { fill: #a5d6a7; }
+
+    /* ── VPN modal overlay ───────────────────────────────────── */
+    .vpn-overlay {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .vpn-modal-content {
+      background: var(--card);
+      margin: 8% auto;
+      border-radius: var(--radius);
+      width: 88%;
+      max-width: 680px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Modal header / drag handle ──────────────────────────── */
+    #drag-handle {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #dbeafe;
+      padding: 12px 16px;
+      cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .vpn-close {
+      color: #93c5fd;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .vpn-close:hover { color: #ffffff; background: none; }
+
+    /* ── Modal body ──────────────────────────────────────────── */
+    .vpn-modal-body { padding: 20px; }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 14px;
+      color: var(--text);
+    }
+
+    /* ── Form rows ───────────────────────────────────────────── */
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .row label {
+      width: 185px;
+      flex-shrink: 0;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+
+    .row select { flex: 1; margin-bottom: 0; }
+
+    .row span {
+      flex: 1;
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Nav buttons inside modal ────────────────────────────── */
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    #save-msg {
+      font-size: 0.85rem;
+      color: var(--correct);
+      font-weight: 600;
+    }
+
+    /* ── Submit result ───────────────────────────────────────── */
+    .submit-result {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .submit-result.good {
+      border: 1px solid var(--correct);
+      background: #f0fdf4;
+      color: #14532d;
+    }
+
+    .submit-result.partial {
+      border: 1px solid #fcd34d;
+      background: #fffbeb;
+      color: #78350f;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sim-nav" aria-label="Site navigation">
+  <span class="sim-nav-brand">Security+ Training Simulations</span>
+  <a class="sim-nav-back" href="../../">&#8592; Dashboard</a>
+</nav>
+
+<main class="sim-page">
+
+  <header class="sim-header">
+    <h1>Site-to-Site VPN Configuration</h1>
+    <p>Click each VPN concentrator to configure its Phase 1 and Phase 2 settings. Use the most secure algorithms available and configure peer IPs to point to the opposite site's concentrator.</p>
+  </header>
+
+  <div class="card">
+    <p style="color: var(--muted); font-size: 0.9rem; margin: 0 0 18px; line-height: 1.65;">
+      You are responsible for setting up a site-to-site VPN to securely connect two remote networks.
+      The configuration must use the most secure encryption algorithms available to ensure confidentiality and integrity.
+      All traffic between the two sites should be fully encrypted over the VPN tunnel.
+      Authentication between the VPN concentrators must use a shared secret password so that only trusted devices can form the connection.
+    </p>
+    <div class="diagram">
+      <svg viewBox="0 0 960 180" width="100%" height="220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 z" fill="#444" />
+          </marker>
+        </defs>
+        <!-- Columbus Site -->
+        <polygon points="240,30 290,0 340,30" fill="#b0bec5" stroke="#444" />
+        <rect x="240" y="30" width="100" height="50" fill="#e3f2fd" stroke="#444" />
+        <text x="290" y="55" text-anchor="middle" font-size="12">Columbus Site</text>
+        <text x="290" y="68" text-anchor="middle" font-size="10">192.168.1.0/24</text>
+        <line x1="290" y1="80" x2="290" y2="100" stroke="#444" stroke-width="2" marker-end="url(#arrow)" />
+        <!-- VPN Concentrator 1 (clickable) -->
+        <g id="vpn1" class="clickable" onclick="selectVPN('VPN Concentrator 1')">
+          <rect x="240" y="100" width="100" height="60" fill="#c8e6c9" stroke="#444" rx="4" />
+          <text x="290" y="128" text-anchor="middle" font-size="12" font-weight="bold">VPN1</text>
+          <text x="290" y="145" text-anchor="middle" font-size="10">5.5.5.10/24</text>
+        </g>
+        <!-- Internet cloud -->
+        <line x1="340" y1="130" x2="620" y2="130" stroke="#444" stroke-dasharray="5,5" />
+        <circle cx="475" cy="130" r="20" fill="#fff3e0" stroke="#444" />
+        <circle cx="455" cy="125" r="20" fill="#fff3e0" stroke="#444" />
+        <circle cx="495" cy="125" r="20" fill="#fff3e0" stroke="#444" />
+        <circle cx="475" cy="115" r="20" fill="#fff3e0" stroke="#444" />
+        <text x="475" y="122" text-anchor="middle" font-size="9" fill="#555">Internet</text>
+        <!-- VPN Concentrator 2 (clickable) -->
+        <g id="vpn2" class="clickable" onclick="selectVPN('VPN Concentrator 2')">
+          <rect x="625" y="100" width="100" height="60" fill="#c8e6c9" stroke="#444" rx="4" />
+          <text x="675" y="128" text-anchor="middle" font-size="12" font-weight="bold">VPN2</text>
+          <text x="675" y="145" text-anchor="middle" font-size="10">5.5.5.20/24</text>
+        </g>
+        <line x1="675" y1="80" x2="675" y2="100" stroke="#444" stroke-width="2" marker-end="url(#arrow)" />
+        <!-- Dallas Site -->
+        <polygon points="625,30 675,0 725,30" fill="#b0bec5" stroke="#444" />
+        <rect x="625" y="30" width="100" height="50" fill="#e3f2fd" stroke="#444" />
+        <text x="675" y="55" text-anchor="middle" font-size="12">Dallas Site</text>
+        <text x="675" y="68" text-anchor="middle" font-size="10">192.168.2.0/24</text>
+      </svg>
+    </div>
+    <p style="text-align:center; color: var(--muted); font-size:0.82rem; margin: 4px 0 0;">
+      Click <strong>VPN1</strong> or <strong>VPN2</strong> to open the configuration panel.
+    </p>
+  </div>
+
+  <div class="btn-row">
+    <button id="submitAll">Submit</button>
+    <button class="secondary" id="resetAll">Reset</button>
+  </div>
+
+  <div id="submitResult" class="submit-result"></div>
+
+  <footer class="sim-footer">
+    Instructor-created VPN configuration simulation using fictional network addresses for skills development; not representative of any certification exam content.
+  </footer>
+
+</main>
+
+<!-- ── VPN Configuration Modal ───────────────────────────────── -->
+<div id="vpnModal" class="vpn-overlay">
+  <div id="vpnModalContent" class="vpn-modal-content">
+    <div id="drag-handle">
+      <span id="modal-title">VPN Configuration</span>
+      <button class="vpn-close" onclick="closeModal()">✖</button>
+    </div>
+    <div id="dynamic-form" class="vpn-modal-body"></div>
+  </div>
+</div>
+
+<script>
+  const vpnData = {
+    "VPN Concentrator 1": {
+      phase1: {
+        "Peer IP":              ["5.5.5.20/24",   ["192.168.1.0/24", "5.5.5.20/24", "192.168.2.0/24", "5.5.5.10/24"]],
+        "Auth Method":          ["PSK",            ["PSK", "RADIUS", "Enterprise"]],
+        "Negotiation Mode":     ["Main",           null],
+        "Encryption Algorithm": ["AES 256",        ["Blowfish", "3DES", "AES 256", "DES"]],
+        "Hash Algorithm":       ["SHA 256",        ["SHA1", "SHA 256", "MD5"]],
+        "DH Key Group":         ["14",             null]
+      },
+      phase2: {
+        "Mode":                 ["Tunnel",         null],
+        "Protocol":             ["ESP",            ["ESP", "AH"]],
+        "Encryption Algorithm": ["AES 256",        ["AES 256", "Blowfish", "3DES", "DES"]],
+        "Hash Algorithm":       ["SHA 256",        ["SHA1", "MD5", "SHA 256"]],
+        "Local Net/Mask":       ["192.168.1.0/24", ["192.168.1.0/24", "5.5.5.10/24", "192.168.2.0/24", "5.5.5.20/24"]],
+        "Remote Net/Mask":      ["192.168.2.0/24", ["192.168.1.0/24", "5.5.5.10/24", "192.168.2.0/24", "5.5.5.20/24"]]
+      }
+    },
+    "VPN Concentrator 2": {
+      phase1: {
+        "Peer IP":              ["5.5.5.10/24",   ["5.5.5.10/24", "192.168.1.0/24", "5.5.5.20/24", "192.168.2.0/24"]],
+        "Auth Method":          ["PSK",            ["PSK", "RADIUS", "Enterprise"]],
+        "Negotiation Mode":     ["Main",           null],
+        "Encryption Algorithm": ["AES 256",        ["AES 256", "Blowfish", "3DES", "DES"]],
+        "Hash Algorithm":       ["SHA 256",        ["SHA 256", "SHA1", "MD5"]],
+        "DH Key Group":         ["14",             null]
+      },
+      phase2: {
+        "Mode":                 ["Tunnel",         null],
+        "Protocol":             ["ESP",            ["ESP", "AH"]],
+        "Encryption Algorithm": ["AES 256",        ["AES 256", "Blowfish", "3DES", "DES"]],
+        "Hash Algorithm":       ["SHA 256",        ["SHA 256", "SHA1", "MD5"]],
+        "Local Net/Mask":       ["192.168.2.0/24", ["5.5.5.20/24", "192.168.2.0/24", "5.5.5.10/24", "192.168.1.0/24"]],
+        "Remote Net/Mask":      ["192.168.1.0/24", ["5.5.5.10/24", "192.168.1.0/24", "192.168.2.0/24", "5.5.5.20/24"]]
+      }
+    }
+  };
+
+  let currentConcentrator = null;
+  let currentPhase = 1;
+  const userSelections = {};
+
+  function selectVPN(conc) {
+    currentConcentrator = conc;
+    currentPhase = 1;
+    document.getElementById('modal-title').textContent = conc;
+    loadForm();
+    const modal   = document.getElementById('vpnModal');
+    const content = document.getElementById('vpnModalContent');
+    modal.style.display    = 'block';
+    content.style.position = 'relative';
+    content.style.left     = '';
+    content.style.top      = '';
+    content.style.margin   = '8% auto';
+  }
+
+  function closeModal() {
+    document.getElementById('vpnModal').style.display = 'none';
+  }
+
+  function makeDraggable(modal, handle) {
+    let offsetX = 0, offsetY = 0, isDragging = false;
+    handle.addEventListener('mousedown', function(e) {
+      isDragging = true;
+      const rect = modal.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (isDragging) {
+        modal.style.position = 'absolute';
+        modal.style.margin   = '0';
+        modal.style.left     = `${e.clientX - offsetX}px`;
+        modal.style.top      = `${e.clientY - offsetY}px`;
+      }
+    });
+    document.addEventListener('mouseup', function() {
+      isDragging = false;
+      document.body.style.userSelect = '';
+    });
+  }
+
+  function loadForm() {
+    const container = document.getElementById('dynamic-form');
+    container.innerHTML = '';
+
+    const title = document.createElement('div');
+    title.className   = 'section-title';
+    title.textContent = `${currentConcentrator} — Phase ${currentPhase}`;
+    container.appendChild(title);
+
+    const config = vpnData[currentConcentrator][`phase${currentPhase}`];
+    userSelections[currentConcentrator] = userSelections[currentConcentrator] || {};
+    const saved        = userSelections[currentConcentrator][`phase${currentPhase}`] || {};
+    const selectionSet = {};
+
+    Object.entries(config).forEach(([field, [correct, options]]) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const lbl = document.createElement('label');
+      lbl.textContent = field;
+      row.appendChild(lbl);
+      if (options) {
+        const select      = document.createElement('select');
+        const placeholder = document.createElement('option');
+        placeholder.value       = '';
+        placeholder.textContent = 'Select...';
+        select.appendChild(placeholder);
+        options.forEach(opt => {
+          const e = document.createElement('option');
+          e.value = opt; e.textContent = opt;
+          select.appendChild(e);
+        });
+        if (saved[field]) select.value = saved[field];
+        row.appendChild(select);
+        selectionSet[field] = select;
+      } else {
+        const span       = document.createElement('span');
+        span.textContent = correct;
+        row.appendChild(span);
+        selectionSet[field] = { value: () => correct };
+      }
+      container.appendChild(row);
+    });
+
+    const nav     = document.createElement('div');
+    nav.className = 'nav-buttons';
+
+    const saveBtn       = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    nav.appendChild(saveBtn);
+
+    const saveMsg = document.createElement('span');
+    saveMsg.id    = 'save-msg';
+    nav.appendChild(saveMsg);
+
+    saveBtn.onclick = () => {
+      userSelections[currentConcentrator][`phase${currentPhase}`] = {};
+      Object.entries(selectionSet).forEach(([k, el]) => {
+        userSelections[currentConcentrator][`phase${currentPhase}`][k] = el.value;
+      });
+      saveMsg.textContent = `Phase ${currentPhase} saved ✓`;
+      setTimeout(() => { saveMsg.textContent = ''; }, 2500);
+    };
+
+    if (currentPhase === 1) {
+      const nextBtn       = document.createElement('button');
+      nextBtn.textContent = 'Next →';
+      nextBtn.onclick     = () => { currentPhase = 2; loadForm(); };
+      nav.appendChild(nextBtn);
+    } else {
+      const backBtn       = document.createElement('button');
+      backBtn.className   = 'secondary';
+      backBtn.textContent = '← Back';
+      backBtn.onclick     = () => { currentPhase = 1; loadForm(); };
+      nav.appendChild(backBtn);
+
+      const finishBtn       = document.createElement('button');
+      finishBtn.textContent = 'Finish';
+      finishBtn.onclick     = () => { closeModal(); };
+      nav.appendChild(finishBtn);
+    }
+
+    container.appendChild(nav);
+  }
+
+  document.getElementById('submitAll').onclick = () => {
+    let score = 0, total = 0;
+    Object.entries(vpnData).forEach(([conc, phases]) => {
+      Object.entries(phases).forEach(([ph, fields]) => {
+        Object.entries(fields).forEach(([fld, [correct, options]]) => {
+          if (options) {
+            total++;
+            if (userSelections[conc]?.[ph]?.[fld] === correct) score++;
+          }
+        });
+      });
+    });
+
+    const fb       = document.getElementById('submitResult');
+    fb.style.display = 'block';
+    fb.className     = 'submit-result ' + (score === total ? 'good' : 'partial');
+    fb.innerHTML     = score === total
+      ? `<strong>✓ All correct! Score: ${score}/${total}</strong> — Both concentrators are fully configured with the strongest available algorithms.`
+      : `<strong>Score: ${score}/${total}</strong> — Review your configurations. Confirm AES 256 + SHA 256 for encryption/hashing, ESP as the protocol, and that each concentrator's Peer IP points to the <em>opposite</em> concentrator. Ensure Local/Remote networks match each site's subnet.`;
+  };
+
+  document.getElementById('resetAll').onclick = () => {
+    for (let k in userSelections) delete userSelections[k];
+    closeModal();
+    const fb = document.getElementById('submitResult');
+    fb.style.display = 'none';
+  };
+
+  window.onload = () => {
+    makeDraggable(
+      document.getElementById('vpnModalContent'),
+      document.getElementById('drag-handle')
+    );
+  };
+</script>
+
+</body>
+</html>

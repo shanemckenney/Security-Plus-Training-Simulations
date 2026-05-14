@@ -336,44 +336,18 @@
     }
 
     @media (max-width: 950px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .grid  { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 640px) {
-      .hero {
-        padding: 40px 18px 62px;
-      }
-
-      .page {
-        padding: 0 16px 30px;
-      }
-
-      .grid,
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .section-heading {
-        display: block;
-      }
-
-      .card {
-        min-height: auto;
-      }
-
-      .hero-actions {
-        flex-direction: column;
-      }
-
-      .hero-button {
-        text-align: center;
-      }
+      .hero { padding: 40px 18px 62px; }
+      .page { padding: 0 16px 30px; }
+      .grid, .stats { grid-template-columns: 1fr; }
+      .section-heading { display: block; }
+      .card { min-height: auto; }
+      .hero-actions { flex-direction: column; }
+      .hero-button { text-align: center; }
     }
   </style>
 </head>
@@ -397,7 +371,6 @@
 
       <div class="hero-actions">
         <a class="hero-button primary" href="#simulations">Launch Simulations</a>
-        <a class="hero-button secondary" href="README.md">View Project README</a>
       </div>
     </div>
   </header>
@@ -406,20 +379,17 @@
 
     <section class="stats" aria-label="Simulation library summary">
       <div class="stat">
-        <strong>5</strong>
+        <strong>8</strong>
         <span>Training simulations</span>
       </div>
-
       <div class="stat">
         <strong>100%</strong>
         <span>Browser-based practice</span>
       </div>
-
       <div class="stat">
         <strong>0</strong>
         <span>Actual exam questions</span>
       </div>
-
       <div class="stat">
         <strong>Mobile</strong>
         <span>Designed for quick access</span>
@@ -445,23 +415,17 @@
             <div class="icon">⚔️</div>
             <span class="difficulty guided">Guided</span>
           </div>
-
-          <h3>Attack Identification & Remediation</h3>
-
+          <h3>Attack Identification &amp; Remediation</h3>
           <p>
             Identify attack types from scenario clues and select the most appropriate
             remediation based on the behavior described.
           </p>
-
           <div class="meta">
             <span>Threats</span>
             <span>Remediation</span>
             <span>10–15 min</span>
           </div>
-
-          <a class="launch" href="simulations/attack-identification-remediation/">
-            Launch Simulation →
-          </a>
+          <a class="launch" href="simulations/attack-identification-remediation/">Launch Simulation →</a>
         </article>
 
         <article class="card">
@@ -469,23 +433,17 @@
             <div class="icon">🧱</div>
             <span class="difficulty">Intermediate</span>
           </div>
-
           <h3>Firewall ACL Analysis</h3>
-
           <p>
             Review firewall rules, determine whether traffic is allowed or blocked,
             and identify security issues in the rule set.
           </p>
-
           <div class="meta">
             <span>ACLs</span>
             <span>Ports</span>
             <span>10–15 min</span>
           </div>
-
-          <a class="launch" href="simulations/firewall-acl-analysis/">
-            Launch Simulation →
-          </a>
+          <a class="launch" href="simulations/firewall-acl-analysis/">Launch Simulation →</a>
         </article>
 
         <article class="card">
@@ -493,23 +451,17 @@
             <div class="icon">💻</div>
             <span class="difficulty advanced">Advanced</span>
           </div>
-
           <h3>Host-Based Incident Response</h3>
-
           <p>
             Use simulated command-line outputs to investigate suspicious activity,
             validate indicators, stop active behavior, and remove persistence.
           </p>
-
           <div class="meta">
             <span>IR</span>
             <span>CLI</span>
             <span>15–20 min</span>
           </div>
-
-          <a class="launch" href="simulations/host-based-incident-response/">
-            Launch Simulation →
-          </a>
+          <a class="launch" href="simulations/host-based-incident-response/">Launch Simulation →</a>
         </article>
 
         <article class="card">
@@ -517,23 +469,17 @@
             <div class="icon">🏢</div>
             <span class="difficulty guided">Guided</span>
           </div>
-
           <h3>Physical Security Controls</h3>
-
           <p>
             Match physical security controls to facility locations based on the threats
             each control is designed to reduce.
           </p>
-
           <div class="meta">
             <span>Controls</span>
             <span>Facilities</span>
             <span>8–12 min</span>
           </div>
-
-          <a class="launch" href="simulations/physical-security-controls/">
-            Launch Simulation →
-          </a>
+          <a class="launch" href="simulations/physical-security-controls/">Launch Simulation →</a>
         </article>
 
         <article class="card">
@@ -541,23 +487,71 @@
             <div class="icon">🔐</div>
             <span class="difficulty">Intermediate</span>
           </div>
-
           <h3>Secure Remote Access Workflow</h3>
-
           <p>
             Arrange the correct secure remote access process from service availability
             through authentication, authorization, least privilege, and logging.
           </p>
-
           <div class="meta">
             <span>Access Control</span>
             <span>Workflow</span>
             <span>10–15 min</span>
           </div>
+          <a class="launch" href="simulations/secure-remote-access-workflow/">Launch Simulation →</a>
+        </article>
 
-          <a class="launch" href="simulations/secure-remote-access-workflow/">
-            Launch Simulation →
-          </a>
+        <article class="card">
+          <div class="card-top">
+            <div class="icon">🌐</div>
+            <span class="difficulty">Intermediate</span>
+          </div>
+          <h3>Network Threat Analysis</h3>
+          <p>
+            Examine device and firewall logs across a simulated network to identify
+            the origin system, infected machines, and clean devices.
+          </p>
+          <div class="meta">
+            <span>Malware</span>
+            <span>Log Analysis</span>
+            <span>10–15 min</span>
+          </div>
+          <a class="launch" href="simulations/network-threat-analysis/">Launch Simulation →</a>
+        </article>
+
+        <article class="card">
+          <div class="card-top">
+            <div class="icon">🔒</div>
+            <span class="difficulty">Intermediate</span>
+          </div>
+          <h3>Site-to-Site VPN Configuration</h3>
+          <p>
+            Configure Phase 1 and Phase 2 settings on two VPN concentrators to establish
+            a secure encrypted tunnel between two remote sites.
+          </p>
+          <div class="meta">
+            <span>VPN</span>
+            <span>Encryption</span>
+            <span>10–15 min</span>
+          </div>
+          <a class="launch" href="simulations/site-to-site-vpn/">Launch Simulation →</a>
+        </article>
+
+        <article class="card">
+          <div class="card-top">
+            <div class="icon">☁️</div>
+            <span class="difficulty guided">Guided</span>
+          </div>
+          <h3>VPC Architecture</h3>
+          <p>
+            Drag cloud components — WAF, load balancers, instances, and a database —
+            into the correct subnet zones of a secure VPC network diagram.
+          </p>
+          <div class="meta">
+            <span>Cloud</span>
+            <span>Architecture</span>
+            <span>10–15 min</span>
+          </div>
+          <a class="launch" href="simulations/vpc-architecture/">Launch Simulation →</a>
         </article>
 
       </div>
@@ -573,7 +567,7 @@
   </main>
 
   <footer>
-    Security+ Training Simulations | Instructor-created practice content 
+    Security+ Training Simulations | Instructor-created practice content
   </footer>
 
 </body>
