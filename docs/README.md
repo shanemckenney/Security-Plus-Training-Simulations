@@ -262,7 +262,7 @@ Current safeguards include:
 - No user accounts
 - No authentication system
 - No backend database
-- No student data collection
+- No student data collection 
 - No analytics or tracking
 - No hidden form submission
 - No external dependencies
