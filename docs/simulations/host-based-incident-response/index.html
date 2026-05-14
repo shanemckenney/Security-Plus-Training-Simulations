@@ -103,6 +103,23 @@
       font-size: 1rem;
     }
 
+    /* ── Student guide button ────────────────────────────────── */
+    .guide-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #f3f4f6;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+    .guide-btn:hover { background: #e5e7eb; }
+
     @media (max-width: 800px) {
       .ir-grid   { grid-template-columns: 1fr; }
       .terminal  { height: 320px; }
@@ -154,7 +171,10 @@
 
   <div class="card">
     <h2>Evaluation</h2>
-    <button onclick="grade()">Submit</button>
+    <div class="btn-row">
+      <button onclick="grade()">Submit</button>
+      <a href="student-guide.pdf" target="_blank" class="guide-btn">📄 Student Guide</a>
+    </div>
     <p id="result" class="result"></p>
 
     <div id="explanation">
