@@ -83,7 +83,7 @@
     /* Simulation Grid (3 Columns) */
     .simulation-grid {
       display: grid;
-      grid-template-columns: 250px 1fr 320px;
+      grid-template-columns: 250px 1fr 340px;
       gap: 20px;
       flex: 1;
     }
@@ -167,7 +167,7 @@
     }
 
     .email-content-wrapper {
-      display: none; /* Toggled via JS */
+      display: none;
       flex-direction: column;
       gap: 14px;
       padding: 20px;
@@ -287,7 +287,7 @@
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .panel-title {
@@ -301,7 +301,7 @@
     .classification-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .active-inspection-title {
@@ -314,7 +314,7 @@
       color: #ffffff;
       font-weight: 700;
       display: block;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .decision-buttons {
@@ -355,11 +355,42 @@
       color: #ffffff;
     }
 
+    /* Pedagogical Real-Time Insight Card */
+    .educational-insight-card {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .educational-insight-card.active {
+      display: block;
+    }
+
+    .insight-header {
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .insight-header.correct-alignment {
+      color: #4ade80;
+    }
+
+    .insight-header.incorrect-alignment {
+      color: #f87171;
+    }
+
     .question-block {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     .question-label {
@@ -390,7 +421,7 @@
       align-items: center;
       gap: 12px;
       margin-top: auto;
-      padding-top: 20px;
+      padding-top: 14px;
     }
 
     .btn-action {
@@ -538,12 +569,12 @@
   <main class="container">
     <!-- Prompt Panel -->
     <section class="prompt-card">
-      <h2>Instructions</h2>
+      <h2>Instructions &amp; Analyst Guidance</h2>
       <p style="font-size: 0.92rem; color: #cbd5e1;">
         You are an Incident Responder. Analyze the <strong>three emails</strong> in the queue below. For <em>each email</em>:
-        <br>1. Inspect every highlighted block by clicking on it.
-        <br>2. Classify the block as <strong>Safe</strong> or <strong>Suspicious</strong> in the analysis panel.
-        <br>3. Select the <strong>Overall Attack Type</strong> for that specific email.
+        <br>1. Click each highlighted email component to inspect its properties.
+        <br>2. Classify the element as <strong>Safe</strong> or <strong>Suspicious</strong> to unlock <strong>real-time educational insights</strong> explaining the indicator.
+        <br>3. Select the <strong>Overall Attack Type Classification</strong> for that message before submitting.
       </p>
     </section>
 
@@ -724,7 +755,17 @@
           </div>
         </div>
 
-        <hr style="border-color: var(--border-color); margin: 6px 0;">
+        <!-- Real-Time Pedagogical Feedback Card -->
+        <div class="educational-insight-card" id="educational-insight-card">
+          <div class="insight-header" id="insight-header">
+            💡 Educational Insight
+          </div>
+          <div id="insight-body-text" style="color: #cbd5e1;">
+            Select an element and mark it as Safe or Suspicious to reveal Security+ technical analysis details.
+          </div>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 2px 0;">
 
         <!-- Global Attack Type Dropdown -->
         <div class="question-block">
@@ -755,7 +796,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h2 style="font-size: 1.3rem; color: #38bdf8;">Simulation Results &amp; Analysis</h2>
+          <h2 style="font-size: 1.3rem; color: #38bdf8;">Simulation Results &amp; Comprehensive Analysis</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted);">CompTIA Security+ SY0-701 Objective 2.1</p>
         </div>
         <div id="score-display" class="score-badge score-pass">Score: 100%</div>
@@ -777,50 +818,122 @@
   </footer>
 
   <script>
-    // System Data Architecture
+    // System Data Architecture with Deep Pedagogical Explanations
     const examData = {
       email1: {
         title: "Email 1: IT Support (Spear Phishing)",
         correctType: "spear_phishing",
-        typeExplanation: "Spear Phishing: Targets specific internal users with tailored pretexts (SSO migration) using spoofed domain names.",
+        typeExplanation: "Spear Phishing: Targets specific internal employees with tailored pretexts (SSO migration) using spoofed domain names to harvest corporate credentials.",
         elements: {
-          sender: { name: "Sender Address", answer: "suspicious", exp: "Typosquatting: 'corp-sec-update.com' is an external domain impersonating internal IT." },
-          subject: { name: "Subject Line", answer: "suspicious", exp: "Urgency/Coercion: Uses high-pressure threats ('Suspension in 2 Hours')." },
-          body: { name: "Message Body", answer: "suspicious", exp: "Generic Greeting: 'Valued Enterprise Employee' contradicts targeted internal IT emails." },
-          link: { name: "Action Link", answer: "suspicious", exp: "Mismatched Target: Display text shows official SSL link, but target is an unencrypted IP (192.168.1.105)." },
-          attachment: { name: "Attachment", answer: "suspicious", exp: "Double Extension: Uses '.pdf.exe' to mask an executable payload." },
-          footer: { name: "Footer", answer: "safe", exp: "Legitimate baseline corporate boilerplate." }
+          sender: { 
+            name: "Sender Address", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Typosquatting/Spoofing): The domain 'corp-sec-update.com' is an external domain mimicking internal IT. Official corporate mail should originate strictly from the verified enterprise domain (@enterprise.com)." 
+          },
+          subject: { 
+            name: "Subject Line", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Urgency & Coercion): Phrases like 'URGENT' and 'Account Suspension in 2 Hours' leverage psychological pressure to induce panic and force rapid compliance without secondary verification." 
+          },
+          body: { 
+            name: "Message Body", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Generic Salutation in Targeted Pretext): Addressing targeted users with generic salutations ('Dear Valued Enterprise Employee') is a classic phishing indicator in spear phishing campaigns." 
+          },
+          link: { 
+            name: "Action Link", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Mismatched Hyperlink Target): While the display text shows an encrypted SSL address (https://sso.enterprise.com), hovering reveals a raw IP address over unencrypted HTTP (http://192.168.1.105)." 
+          },
+          attachment: { 
+            name: "Attachment", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Double Extension Vector): File named 'SSO_Migration_Guide.pdf.exe' uses a double extension to trick users into executing an unauthorized binary file disguised as a standard PDF document." 
+          },
+          footer: { 
+            name: "Footer Notice", 
+            answer: "safe", 
+            exp: "SAFE (Standard Baseline Boilerplate): This is standard automated corporate legal confidentiality disclaimer text commonly appended to all outbound email traffic." 
+          }
         }
       },
       email2: {
         title: "Email 2: CEO Impersonation (Whaling / BEC)",
         correctType: "bec_whaling",
-        typeExplanation: "Whaling/BEC: Directly impersonates an executive (CEO) to bypass financial controls and authorize fraudulent wire transfers.",
+        typeExplanation: "Whaling/BEC: Directly impersonates an executive (CEO) to bypass standard authorization workflows and trick finance staff into authorizing fraudulent wire transfers.",
         elements: {
-          sender: { name: "Sender Address", answer: "suspicious", exp: "Typosquatting: Domain is 'enterprlse.com' (letter L instead of I)." },
-          subject: { name: "Subject Line", answer: "suspicious", exp: "Secrecy & Urgency: 'Confidential' and 'Urgent' combination is a classic BEC hallmark." },
-          body: { name: "Message Body", answer: "suspicious", exp: "Bypassing Controls: 'I am on a flight' is an excuse used to prevent out-of-band verbal verification." },
-          link: { name: "Action Link", answer: "suspicious", exp: "Suspicious IP Target: Points directly to an external, untrusted IP address." },
-          attachment: { name: "Attachment", answer: "suspicious", exp: "Malicious Filetype: .iso files are frequently used to bypass Windows Mark-of-the-Web (MotW) protections." },
-          footer: { name: "Footer", answer: "safe", exp: "'Sent from my iPad' is standard and not inherently malicious." }
+          sender: { 
+            name: "Sender Address", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Character Substitution Typosquatting): Look closely at 'r.roe@enterprlse.com'. The attacker substituted the lowercase letter 'i' with a lowercase 'l' to create a deceptive look-alike domain." 
+          },
+          subject: { 
+            name: "Subject Line", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Executive Urgency & Secrecy): Demanding 'Confidential: Urgent Vendor Payment' combines strict secrecy with speed to prevent lower-level staff from consulting peers." 
+          },
+          body: { 
+            name: "Message Body", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Bypassing Out-of-Band Controls): Claiming 'I am currently on a flight and cannot be reached by phone' is an intentional tactic to prevent the target from making an out-of-band verification call." 
+          },
+          link: { 
+            name: "Action Link", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (External IP Destination): The link text displays 'Secure Corporate Wire Portal', but inspection reveals a direct IP destination (http://103.44.2.19) hosted outside corporate infrastructure." 
+          },
+          attachment: { 
+            name: "Attachment", 
+            answer: "suspicious", 
+            exp: "SUSPICIOUS (Disk Image Container Payload): Attachments with '.iso' extensions bypass Windows Mark-of-the-Web (MotW) security warnings and directly mount virtual disks containing malicious scripts." 
+          },
+          footer: { 
+            name: "Footer Notice", 
+            answer: "safe", 
+            exp: "SAFE (Standard Mobile Boilerplate): 'Sent from my iPad' is a standard default signature line for mobile devices and is not an indicator of compromise." 
+          }
         }
       },
       email3: {
         title: "Email 3: HR Department (Legitimate)",
         correctType: "legitimate",
-        typeExplanation: "Legitimate Communication: Recognizing false positives is crucial. This email utilizes correct internal domains, safe links, and lacks coercive urgency.",
+        typeExplanation: "Legitimate Communication: Recognizing false positives is critical for security analysts. This email utilizes verified internal domains, HTTPS links, expected PDF formats, and non-coercive messaging.",
         elements: {
-          sender: { name: "Sender Address", answer: "safe", exp: "Matches the exact, correct internal domain '@enterprise.com'." },
-          subject: { name: "Subject Line", answer: "safe", exp: "Informational: Clearly marked 'Action Optional' with standard phrasing." },
-          body: { name: "Message Body", answer: "safe", exp: "Standard Corporate Comms: No threats, directs user to standard internal hotline." },
-          link: { name: "Action Link", answer: "safe", exp: "Safe Link: Display URL exactly matches the target Intranet URL." },
-          attachment: { name: "Attachment", answer: "safe", exp: "Standard Filetype: A standard, expected .pdf file matching the context." },
-          footer: { name: "Footer", answer: "safe", exp: "Standard internal HR sign-off." }
+          sender: { 
+            name: "Sender Address", 
+            answer: "safe", 
+            exp: "SAFE (Verified Internal Domain): Originates from 'hr-benefits@enterprise.com', which matches the exact official internal domain syntax without character substitutions or spoofed external domain aliases." 
+          },
+          subject: { 
+            name: "Subject Line", 
+            answer: "safe", 
+            exp: "SAFE (Informational Wording): Titled 'Action Optional: 2027 Open Enrollment Overview'. It contains no threats, coercion, or artificial emergency deadlines." 
+          },
+          body: { 
+            name: "Message Body", 
+            answer: "safe", 
+            exp: "SAFE (Standard HR Workflow): Professional internal messaging stating 'If you do not wish to make changes, no action is required' and provides a verifiable internal HR extension (4099)." 
+          },
+          link: { 
+            name: "Action Link", 
+            answer: "safe", 
+            exp: "SAFE (Matching Intranet Domain & HTTPS): Anchor text and inspected target destination are identical (https://intranet.enterprise.com/benefits) and correctly point to secured internal HTTPS infrastructure." 
+          },
+          attachment: { 
+            name: "Attachment", 
+            answer: "safe", 
+            exp: "SAFE (Expected Document Format): '2027_Benefits_Guide.pdf' is a standard single-extension PDF file matching the context of the HR open enrollment notification." 
+          },
+          footer: { 
+            name: "Footer Notice", 
+            answer: "safe", 
+            exp: "SAFE (Verifiable Corporate Extension): Includes standard internal department contact info ('Internal Ext: 4099') matching standard internal directory listings." 
+          }
         }
       }
     };
 
-    // User State Machine
+    // User State Engine
     let currentEmailId = 'email1';
     let activeBlockKey = null;
     
@@ -840,15 +953,16 @@
       currentEmailId = targetEmail;
       activeBlockKey = null;
 
-      // Update Inbox UI
+      // Update Sidebar UI
       document.querySelectorAll('.inbox-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`inbox-${targetEmail}`).classList.add('active');
 
-      // Update Email Viewer UI
+      // Switch Active View Wrapper
       document.querySelectorAll('.email-content-wrapper').forEach(el => el.classList.remove('active'));
+      document.getElementById(`wrapper-${targetEmail}`).classList.active = false;
       document.getElementById(`wrapper-${targetEmail}`).classList.add('active');
 
-      // Reset Analysis Panel State for new tab
+      // Reset Analysis Control State
       document.getElementById('active-email-context').innerText = targetEmail === 'email1' ? 'Email 1' : targetEmail === 'email2' ? 'Email 2' : 'Email 3';
       document.getElementById('active-element-display').innerText = "None Selected";
       
@@ -858,29 +972,40 @@
       document.getElementById('btn-mark-suspicious').disabled = true;
       updateButtonStyles(null);
 
-      // Load saved dropdown state
+      // Reset Educational Insight Box
+      hideEducationalInsight();
+
+      // Load Saved State for dropdown
       document.getElementById('attack-type-select').value = userAttackTypes[targetEmail];
     }
 
     function selectBlock(emailId, blockKey) {
-      if(emailId !== currentEmailId) return; // Guard clause
+      if(emailId !== currentEmailId) return;
       
       activeBlockKey = blockKey;
 
-      // Highlight active block visually within current email
+      // Highlight target block visually
       const currentWrapper = document.getElementById(`wrapper-${emailId}`);
       currentWrapper.querySelectorAll('.email-block').forEach(el => el.classList.remove('selected'));
       document.getElementById(`${emailId}-${blockKey}`).classList.add('selected');
 
-      // Update Panel Text
+      // Update Control Panel Text
       document.getElementById('active-element-display').innerText = examData[emailId].elements[blockKey].name;
 
-      // Enable Action Buttons
+      // Enable Decision Buttons
       document.getElementById('btn-mark-safe').disabled = false;
       document.getElementById('btn-mark-suspicious').disabled = false;
 
-      // Toggle button styles based on previous state
-      updateButtonStyles(userSelections[emailId][blockKey]);
+      // Update button toggle style
+      const currentChoice = userSelections[emailId][blockKey];
+      updateButtonStyles(currentChoice);
+
+      // Render or Update Educational Insights
+      if (currentChoice) {
+        showEducationalInsight(emailId, blockKey, currentChoice);
+      } else {
+        showPromptInsight(emailId, blockKey);
+      }
     }
 
     function classifyActive(choice) {
@@ -888,7 +1013,7 @@
 
       userSelections[currentEmailId][activeBlockKey] = choice;
 
-      // Update tag display on email card
+      // Update block badge in viewer
       const tagEl = document.getElementById(`tag-${currentEmailId}-${activeBlockKey}`);
       const blockEl = document.getElementById(`${currentEmailId}-${activeBlockKey}`);
 
@@ -905,6 +1030,7 @@
       }
 
       updateButtonStyles(choice);
+      showEducationalInsight(currentEmailId, activeBlockKey, choice);
     }
 
     function updateButtonStyles(currentChoice) {
@@ -921,18 +1047,55 @@
       }
     }
 
+    function showPromptInsight(emailId, blockKey) {
+      const insightCard = document.getElementById('educational-insight-card');
+      const header = document.getElementById('insight-header');
+      const text = document.getElementById('insight-body-text');
+
+      const elName = examData[emailId].elements[blockKey].name;
+
+      header.className = "insight-header";
+      header.innerHTML = `🔍 Inspecting: ${elName}`;
+      text.innerHTML = `Choose <strong>🛡️ Safe</strong> or <strong>🚩 Suspicious</strong> above to evaluate this element and unlock detailed Security+ technical analysis.`;
+
+      insightCard.classList.add('active');
+    }
+
+    function showEducationalInsight(emailId, blockKey, choice) {
+      const insightCard = document.getElementById('educational-insight-card');
+      const header = document.getElementById('insight-header');
+      const text = document.getElementById('insight-body-text');
+
+      const item = examData[emailId].elements[blockKey];
+      const isCorrectChoice = choice === item.answer;
+
+      if (isCorrectChoice) {
+        header.className = "insight-header correct-alignment";
+        header.innerHTML = `✅ Accurate Assessment: ${item.name}`;
+      } else {
+        header.className = "insight-header incorrect-alignment";
+        header.innerHTML = `⚠️ Assessment Warning: ${item.name}`;
+      }
+
+      text.innerHTML = `<strong>Why this element is ${item.answer.toUpperCase()}:</strong><br>${item.exp}`;
+      insightCard.classList.add('active');
+    }
+
+    function hideEducationalInsight() {
+      const insightCard = document.getElementById('educational-insight-card');
+      insightCard.classList.remove('active');
+    }
+
     function saveAttackType() {
       userAttackTypes[currentEmailId] = document.getElementById('attack-type-select').value;
     }
 
     function resetSimulation() {
-      // Clear Data
       ['email1', 'email2', 'email3'].forEach(em => {
         userAttackTypes[em] = "";
         Object.keys(userSelections[em]).forEach(key => {
           userSelections[em][key] = null;
           
-          // Reset UI blocks
           const tag = document.getElementById(`tag-${em}-${key}`);
           const block = document.getElementById(`${em}-${key}`);
           if(tag) {
@@ -945,7 +1108,6 @@
         });
       });
 
-      // Navigate back to Email 1
       switchEmail('email1');
     }
 
@@ -958,7 +1120,7 @@
         remediationHTML += `<div class="email-results-group">`;
         remediationHTML += `<div class="email-results-title">${examData[em].title}</div>`;
 
-        // Grade Attack Type
+        // Grade Attack Classification
         const userType = userAttackTypes[em];
         const correctType = examData[em].correctType;
         const isTypeCorrect = userType === correctType;
@@ -968,13 +1130,13 @@
           <div class="remediation-item ${isTypeCorrect ? 'correct' : 'incorrect'}">
             <div class="remediation-title">${isTypeCorrect ? '✅ Correct' : '❌ Incorrect'}: Attack Classification</div>
             <div class="remediation-desc">
-              <strong>Selection:</strong> ${userType ? formatSelectText(userType) : 'None'} | <strong>Correct:</strong> ${formatSelectText(correctType)}<br>
+              <strong>Your Selection:</strong> ${userType ? formatSelectText(userType) : 'None Selected'} | <strong>Correct Answer:</strong> ${formatSelectText(correctType)}<br>
               <em>${examData[em].typeExplanation}</em>
             </div>
           </div><hr style="border-color: #475569; margin: 8px 0;">
         `;
 
-        // Grade Elements
+        // Grade Individual Elements
         Object.keys(examData[em].elements).forEach(key => {
           const item = examData[em].elements[key];
           const userChoice = userSelections[em][key];
@@ -986,17 +1148,17 @@
             <div class="remediation-item ${isCorrect ? 'correct' : 'incorrect'}">
               <div class="remediation-title">${isCorrect ? '✅ Correct' : '❌ Incorrect'}: ${item.name}</div>
               <div class="remediation-desc">
-                <strong>Selection:</strong> ${userChoice ? userChoice.toUpperCase() : 'UNSELECTED'} | <strong>Correct:</strong> ${item.answer.toUpperCase()}<br>
+                <strong>Your Choice:</strong> ${userChoice ? userChoice.toUpperCase() : 'UNSELECTED'} | <strong>Correct Status:</strong> ${item.answer.toUpperCase()}<br>
                 ${item.exp}
               </div>
             </div>
           `;
         });
 
-        remediationHTML += `</div>`; // Close group
+        remediationHTML += `</div>`;
       });
 
-      // Calculate Final Score
+      // Calculate Aggregate Score
       const finalScore = Math.round((correctAnswers / totalDecisions) * 100);
       const scoreDisplay = document.getElementById('score-display');
       scoreDisplay.innerText = `Score: ${finalScore}%`;
@@ -1013,9 +1175,9 @@
 
     function formatSelectText(val) {
       const map = {
-        'spear_phishing': 'Spear Phishing',
+        'spear_phishing': 'Spear Phishing / Credential Harvest',
         'bec_whaling': 'BEC / Whaling',
-        'legitimate': 'Legitimate / Safe',
+        'legitimate': 'Legitimate / Safe Communication',
         'vishing': 'Vishing',
         'watering_hole': 'Watering Hole'
       };
