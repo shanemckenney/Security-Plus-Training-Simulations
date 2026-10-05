@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security+ Simulation: Phishing Email Analysis</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border-color: #475569;
+      --safe-green: #16a34a;
+      --safe-bg: rgba(22, 163, 74, 0.15);
+      --suspicious-red: #dc2626;
+      --suspicious-bg: rgba(220, 38, 38, 0.15);
+      --warning-yellow: #d97706;
+      --inbox-active: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Exam Window Header */
+    .exam-header {
+      background-color: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .exam-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Prompt Panel */
+    .prompt-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px 20px;
+      line-height: 1.5;
+    }
+
+    .prompt-card h2 {
+      font-size: 1rem;
+      color: #38bdf8;
+      margin-bottom: 6px;
+    }
+
+    /* Simulation Grid (3 Columns) */
+    .simulation-grid {
+      display: grid;
+      grid-template-columns: 250px 1fr 320px;
+      gap: 20px;
+      flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .simulation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Inbox Sidebar */
+    .inbox-panel {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .inbox-header {
+      background-color: var(--bg-card);
+      padding: 12px 16px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+      color: #e2e8f0;
+    }
+
+    .inbox-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .inbox-item:hover {
+      background-color: var(--bg-card);
+    }
+
+    .inbox-item.active {
+      background-color: rgba(59, 130, 246, 0.15);
+      border-left: 4px solid var(--inbox-active);
+    }
+
+    .inbox-sender {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+
+    .inbox-subject {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Email Simulation Interface */
+    .email-client {
+      background-color: #ffffff;
+      color: #1e293b;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    .email-client-header {
+      background-color: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .email-content-wrapper {
+      display: none; /* Toggled via JS */
+      flex-direction: column;
+      gap: 14px;
+      padding: 20px;
+    }
+
+    .email-content-wrapper.active {
+      display: flex;
+    }
+
+    /* Email Block Selectors */
+    .email-block {
+      border: 2px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 14px;
+      position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      background-color: #f8fafc;
+    }
+
+    .email-block:hover {
+      border-color: var(--accent-blue);
+      background-color: #f0f9ff;
+    }
+
+    .email-block.selected {
+      border-style: solid;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .email-block.status-safe {
+      border-style: solid;
+      border-color: var(--safe-green);
+      background-color: #f0fdf4;
+    }
+
+    .email-block.status-suspicious {
+      border-style: solid;
+      border-color: var(--suspicious-red);
+      background-color: #fef2f2;
+    }
+
+    .block-tag {
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background-color: #64748b;
+      color: #ffffff;
+    }
+
+    .block-tag.safe {
+      background-color: var(--safe-green);
+    }
+
+    .block-tag.suspicious {
+      background-color: var(--suspicious-red);
+    }
+
+    .email-field-label {
+      font-weight: 700;
+      color: #475569;
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    .email-field-content {
+      font-size: 0.95rem;
+      color: #0f172a;
+      word-break: break-all;
+    }
+
+    .hyperlink-preview {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+
+    .url-tooltip {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background-color: #1e293b;
+      color: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      display: inline-block;
+      border-left: 3px solid var(--warning-yellow);
+    }
+
+    .url-tooltip.safe-link {
+      border-left-color: var(--safe-green);
+    }
+
+    .attachment-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 4px;
+    }
+
+    /* Analysis Side Panel */
+    .analysis-panel {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .classification-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .active-inspection-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .active-element-name {
+      color: #ffffff;
+      font-weight: 700;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .decision-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-decision {
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-decision:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-decision:hover:not(:disabled) {
+      background-color: var(--border-color);
+    }
+
+    .btn-decision.safe-active {
+      background-color: var(--safe-green);
+      border-color: var(--safe-green);
+      color: #ffffff;
+    }
+
+    .btn-decision.suspicious-active {
+      background-color: var(--suspicious-red);
+      border-color: var(--suspicious-red);
+      color: #ffffff;
+    }
+
+    .question-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .question-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Bottom Action Controls */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    .btn-action {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s;
+      width: 100%;
+    }
+
+    .btn-submit {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-reset {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-reset:hover {
+      background-color: var(--border-color);
+    }
+
+    /* Remediation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 23, 42, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .score-badge {
+      font-size: 1.2rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 6px;
+    }
+
+    .score-pass {
+      background-color: var(--safe-bg);
+      color: #4ade80;
+      border: 1px solid var(--safe-green);
+    }
+
+    .score-fail {
+      background-color: var(--suspicious-bg);
+      color: #f87171;
+      border: 1px solid var(--suspicious-red);
+    }
+
+    .email-results-group {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+
+    .email-results-title {
+      font-size: 1.05rem;
+      color: #38bdf8;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+
+    .remediation-item {
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+      background-color: var(--bg-card);
+    }
+
+    .remediation-item.correct { border-left: 4px solid var(--safe-green); }
+    .remediation-item.incorrect { border-left: 4px solid var(--suspicious-red); }
+
+    .remediation-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .remediation-desc {
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Disclaimer Footer */
+    .disclaimer-footer {
+      background-color: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Exam Header -->
+  <header class="exam-header">
+    <div class="exam-title">Security+ Simulation: Phishing Email Analysis</div>
+  </header>
+
+  <main class="container">
+    <!-- Prompt Panel -->
+    <section class="prompt-card">
+      <h2>Instructions</h2>
+      <p style="font-size: 0.92rem; color: #cbd5e1;">
+        You are an Incident Responder. Analyze the <strong>three emails</strong> in the queue below. For <em>each email</em>:
+        <br>1. Inspect every highlighted block by clicking on it.
+        <br>2. Classify the block as <strong>Safe</strong> or <strong>Suspicious</strong> in the analysis panel.
+        <br>3. Select the <strong>Overall Attack Type</strong> for that specific email.
+      </p>
+    </section>
+
+    <!-- Simulation Workspace -->
+    <div class="simulation-grid">
+      
+      <!-- Inbox Sidebar -->
+      <section class="inbox-panel">
+        <div class="inbox-header">📥 Incident Queue</div>
+        <div class="inbox-item active" id="inbox-email1" onclick="switchEmail('email1')">
+          <div class="inbox-sender">IT Support Desk</div>
+          <div class="inbox-subject">URGENT: Corporate SSO Password...</div>
+        </div>
+        <div class="inbox-item" id="inbox-email2" onclick="switchEmail('email2')">
+          <div class="inbox-sender">Richard Roe, CEO</div>
+          <div class="inbox-subject">Confidential: Urgent Vendor Payment</div>
+        </div>
+        <div class="inbox-item" id="inbox-email3" onclick="switchEmail('email3')">
+          <div class="inbox-sender">HR Department</div>
+          <div class="inbox-subject">Action Optional: 2027 Open Enroll...</div>
+        </div>
+      </section>
+
+      <!-- Email Client Workspace -->
+      <section class="email-client">
+        <div class="email-client-header">
+          <span>🔍 Raw Email Inspector</span>
+        </div>
+
+        <!-- EMAIL 1: Spear Phishing -->
+        <div class="email-content-wrapper active" id="wrapper-email1">
+          <div class="email-block" id="email1-sender" onclick="selectBlock('email1', 'sender')">
+            <span class="block-tag" id="tag-email1-sender">Unexamined</span>
+            <div class="email-field-label">From:</div>
+            <div class="email-field-content">IT Support Desk &lt;admin-support@corp-sec-update.com&gt;</div>
+          </div>
+          <div class="email-block" id="email1-subject" onclick="selectBlock('email1', 'subject')">
+            <span class="block-tag" id="tag-email1-subject">Unexamined</span>
+            <div class="email-field-label">Subject:</div>
+            <div class="email-field-content" style="font-weight: 700;">URGENT: Corporate SSO Password Expiration &amp; Account Suspension in 2 Hours</div>
+          </div>
+          <div class="email-block" id="email1-body" onclick="selectBlock('email1', 'body')">
+            <span class="block-tag" id="tag-email1-body">Unexamined</span>
+            <div class="email-field-label">Message Body:</div>
+            <div class="email-field-content" style="margin-top: 4px;">
+              Dear Valued Enterprise Employee,<br><br>
+              Our automated system detected multiple unauthorized login attempts. To safeguard your account credentials, you must re-authenticate immediately. Failure to verify within 2 hours will result in indefinite account suspension.
+            </div>
+          </div>
+          <div class="email-block" id="email1-link" onclick="selectBlock('email1', 'link')">
+            <span class="block-tag" id="tag-email1-link">Unexamined</span>
+            <div class="email-field-label">Action Link:</div>
+            <div class="email-field-content">
+              Click here to verify: <span class="hyperlink-preview">https://sso.enterprise.com/login</span><br>
+              <div class="url-tooltip">🔍 Target Destination: http://192.168.1.105/auth/login.php?session=harvest</div>
+            </div>
+          </div>
+          <div class="email-block" id="email1-attachment" onclick="selectBlock('email1', 'attachment')">
+            <span class="block-tag" id="tag-email1-attachment">Unexamined</span>
+            <div class="email-field-label">Attachment:</div>
+            <div class="email-field-content">
+              <div class="attachment-box">📄 SSO_Migration_Guide.pdf.exe (1.2 MB)</div>
+            </div>
+          </div>
+          <div class="email-block" id="email1-footer" onclick="selectBlock('email1', 'footer')">
+            <span class="block-tag" id="tag-email1-footer">Unexamined</span>
+            <div class="email-field-label">Corporate Footer Notice:</div>
+            <div class="email-field-content" style="font-size: 0.8rem; color: #64748b;">
+              CONFIDENTIALITY NOTICE: This transmission is for the sole use of the intended recipient(s).
+            </div>
+          </div>
+        </div>
+
+        <!-- EMAIL 2: Whaling / BEC -->
+        <div class="email-content-wrapper" id="wrapper-email2">
+          <div class="email-block" id="email2-sender" onclick="selectBlock('email2', 'sender')">
+            <span class="block-tag" id="tag-email2-sender">Unexamined</span>
+            <div class="email-field-label">From:</div>
+            <div class="email-field-content">Richard Roe, CEO &lt;r.roe@enterprlse.com&gt;</div>
+          </div>
+          <div class="email-block" id="email2-subject" onclick="selectBlock('email2', 'subject')">
+            <span class="block-tag" id="tag-email2-subject">Unexamined</span>
+            <div class="email-field-label">Subject:</div>
+            <div class="email-field-content" style="font-weight: 700;">Confidential: Urgent Vendor Payment</div>
+          </div>
+          <div class="email-block" id="email2-body" onclick="selectBlock('email2', 'body')">
+            <span class="block-tag" id="tag-email2-body">Unexamined</span>
+            <div class="email-field-label">Message Body:</div>
+            <div class="email-field-content" style="margin-top: 4px;">
+              I am currently on a flight and cannot be reached by phone. We need to finalize the acquisition payment by EOD today before markets close. Please process the wire transfer to our new vendor immediately using the attached secure instructions. Keep this confidential.
+            </div>
+          </div>
+          <div class="email-block" id="email2-link" onclick="selectBlock('email2', 'link')">
+            <span class="block-tag" id="tag-email2-link">Unexamined</span>
+            <div class="email-field-label">Action Link:</div>
+            <div class="email-field-content">
+              Access portal: <span class="hyperlink-preview">Secure Corporate Wire Portal</span><br>
+              <div class="url-tooltip">🔍 Target Destination: http://103.44.2.19/portal/wire-auth</div>
+            </div>
+          </div>
+          <div class="email-block" id="email2-attachment" onclick="selectBlock('email2', 'attachment')">
+            <span class="block-tag" id="tag-email2-attachment">Unexamined</span>
+            <div class="email-field-label">Attachment:</div>
+            <div class="email-field-content">
+              <div class="attachment-box">🗜️ Wire_Instructions.iso (3.4 MB)</div>
+            </div>
+          </div>
+          <div class="email-block" id="email2-footer" onclick="selectBlock('email2', 'footer')">
+            <span class="block-tag" id="tag-email2-footer">Unexamined</span>
+            <div class="email-field-label">Corporate Footer Notice:</div>
+            <div class="email-field-content" style="font-size: 0.8rem; color: #64748b;">
+              Sent from my iPad
+            </div>
+          </div>
+        </div>
+
+        <!-- EMAIL 3: Legitimate HR -->
+        <div class="email-content-wrapper" id="wrapper-email3">
+          <div class="email-block" id="email3-sender" onclick="selectBlock('email3', 'sender')">
+            <span class="block-tag" id="tag-email3-sender">Unexamined</span>
+            <div class="email-field-label">From:</div>
+            <div class="email-field-content">HR Department &lt;hr-benefits@enterprise.com&gt;</div>
+          </div>
+          <div class="email-block" id="email3-subject" onclick="selectBlock('email3', 'subject')">
+            <span class="block-tag" id="tag-email3-subject">Unexamined</span>
+            <div class="email-field-label">Subject:</div>
+            <div class="email-field-content" style="font-weight: 700;">Action Optional: 2027 Open Enrollment Overview</div>
+          </div>
+          <div class="email-block" id="email3-body" onclick="selectBlock('email3', 'body')">
+            <span class="block-tag" id="tag-email3-body">Unexamined</span>
+            <div class="email-field-label">Message Body:</div>
+            <div class="email-field-content" style="margin-top: 4px;">
+              Hello Team,<br><br>Annual open enrollment begins next week. Please review the attached benefits guide. If you do not wish to make any changes to your current elections, no action is required. Contact the HR hotline if you have questions.
+            </div>
+          </div>
+          <div class="email-block" id="email3-link" onclick="selectBlock('email3', 'link')">
+            <span class="block-tag" id="tag-email3-link">Unexamined</span>
+            <div class="email-field-label">Action Link:</div>
+            <div class="email-field-content">
+              Portal: <span class="hyperlink-preview">https://intranet.enterprise.com/benefits</span><br>
+              <div class="url-tooltip safe-link">🔍 Target Destination: https://intranet.enterprise.com/benefits</div>
+            </div>
+          </div>
+          <div class="email-block" id="email3-attachment" onclick="selectBlock('email3', 'attachment')">
+            <span class="block-tag" id="tag-email3-attachment">Unexamined</span>
+            <div class="email-field-label">Attachment:</div>
+            <div class="email-field-content">
+              <div class="attachment-box">📄 2027_Benefits_Guide.pdf (850 KB)</div>
+            </div>
+          </div>
+          <div class="email-block" id="email3-footer" onclick="selectBlock('email3', 'footer')">
+            <span class="block-tag" id="tag-email3-footer">Unexamined</span>
+            <div class="email-field-label">Corporate Footer Notice:</div>
+            <div class="email-field-content" style="font-size: 0.8rem; color: #64748b;">
+              Enterprise Inc. Human Resources | Internal Ext: 4099
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analysis Control Panel -->
+      <section class="analysis-panel">
+        <div class="panel-title">Element Analysis Engine</div>
+
+        <div class="classification-group">
+          <div class="active-inspection-title">
+            Inspecting block for: <strong id="active-email-context" style="color:#e2e8f0;">Email 1</strong>
+            <span class="active-element-name" id="active-element-display">None Selected</span>
+          </div>
+
+          <div class="decision-buttons">
+            <button class="btn-decision" id="btn-mark-safe" onclick="classifyActive('safe')" disabled>
+              🛡️ Safe
+            </button>
+            <button class="btn-decision" id="btn-mark-suspicious" onclick="classifyActive('suspicious')" disabled>
+              🚩 Suspicious
+            </button>
+          </div>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 6px 0;">
+
+        <!-- Global Attack Type Dropdown -->
+        <div class="question-block">
+          <label class="question-label" for="attack-type-select">
+            Identify Overall Attack Type for this Email:
+          </label>
+          <select id="attack-type-select" onchange="saveAttackType()">
+            <option value="">-- Select Classification --</option>
+            <option value="spear_phishing">Spear Phishing / Credential Harvest</option>
+            <option value="bec_whaling">Business Email Compromise (BEC) / Whaling</option>
+            <option value="legitimate">Legitimate / Safe Communication</option>
+            <option value="vishing">Vishing (Voice Phishing)</option>
+            <option value="watering_hole">Watering Hole Attack</option>
+          </select>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+          <button class="btn-action btn-reset" onclick="resetSimulation()">Reset All</button>
+          <button class="btn-action btn-submit" onclick="gradeSimulation()">Submit / Grade</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Remediation / Scoring Modal -->
+  <div class="modal-overlay" id="remediation-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem; color: #38bdf8;">Simulation Results &amp; Analysis</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">CompTIA Security+ SY0-701 Objective 2.1</p>
+        </div>
+        <div id="score-display" class="score-badge score-pass">Score: 100%</div>
+      </div>
+
+      <div id="remediation-list">
+        <!-- Dynamic Remediation Content injected here -->
+      </div>
+
+      <div style="text-align: right; margin-top: 10px;">
+        <button class="btn-action btn-submit" style="width: auto;" onclick="closeModal()">Close / Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mandatory Footer Disclaimer Banner -->
+  <footer class="disclaimer-footer">
+    This interactive simulation was independently created by an instructor for educational and exam preparation purposes. It is not affiliated with, endorsed by, or sponsored by CompTIA, Inc.
+  </footer>
+
+  <script>
+    // System Data Architecture
+    const examData = {
+      email1: {
+        title: "Email 1: IT Support (Spear Phishing)",
+        correctType: "spear_phishing",
+        typeExplanation: "Spear Phishing: Targets specific internal users with tailored pretexts (SSO migration) using spoofed domain names.",
+        elements: {
+          sender: { name: "Sender Address", answer: "suspicious", exp: "Typosquatting: 'corp-sec-update.com' is an external domain impersonating internal IT." },
+          subject: { name: "Subject Line", answer: "suspicious", exp: "Urgency/Coercion: Uses high-pressure threats ('Suspension in 2 Hours')." },
+          body: { name: "Message Body", answer: "suspicious", exp: "Generic Greeting: 'Valued Enterprise Employee' contradicts targeted internal IT emails." },
+          link: { name: "Action Link", answer: "suspicious", exp: "Mismatched Target: Display text shows official SSL link, but target is an unencrypted IP (192.168.1.105)." },
+          attachment: { name: "Attachment", answer: "suspicious", exp: "Double Extension: Uses '.pdf.exe' to mask an executable payload." },
+          footer: { name: "Footer", answer: "safe", exp: "Legitimate baseline corporate boilerplate." }
+        }
+      },
+      email2: {
+        title: "Email 2: CEO Impersonation (Whaling / BEC)",
+        correctType: "bec_whaling",
+        typeExplanation: "Whaling/BEC: Directly impersonates an executive (CEO) to bypass financial controls and authorize fraudulent wire transfers.",
+        elements: {
+          sender: { name: "Sender Address", answer: "suspicious", exp: "Typosquatting: Domain is 'enterprlse.com' (letter L instead of I)." },
+          subject: { name: "Subject Line", answer: "suspicious", exp: "Secrecy & Urgency: 'Confidential' and 'Urgent' combination is a classic BEC hallmark." },
+          body: { name: "Message Body", answer: "suspicious", exp: "Bypassing Controls: 'I am on a flight' is an excuse used to prevent out-of-band verbal verification." },
+          link: { name: "Action Link", answer: "suspicious", exp: "Suspicious IP Target: Points directly to an external, untrusted IP address." },
+          attachment: { name: "Attachment", answer: "suspicious", exp: "Malicious Filetype: .iso files are frequently used to bypass Windows Mark-of-the-Web (MotW) protections." },
+          footer: { name: "Footer", answer: "safe", exp: "'Sent from my iPad' is standard and not inherently malicious." }
+        }
+      },
+      email3: {
+        title: "Email 3: HR Department (Legitimate)",
+        correctType: "legitimate",
+        typeExplanation: "Legitimate Communication: Recognizing false positives is crucial. This email utilizes correct internal domains, safe links, and lacks coercive urgency.",
+        elements: {
+          sender: { name: "Sender Address", answer: "safe", exp: "Matches the exact, correct internal domain '@enterprise.com'." },
+          subject: { name: "Subject Line", answer: "safe", exp: "Informational: Clearly marked 'Action Optional' with standard phrasing." },
+          body: { name: "Message Body", answer: "safe", exp: "Standard Corporate Comms: No threats, directs user to standard internal hotline." },
+          link: { name: "Action Link", answer: "safe", exp: "Safe Link: Display URL exactly matches the target Intranet URL." },
+          attachment: { name: "Attachment", answer: "safe", exp: "Standard Filetype: A standard, expected .pdf file matching the context." },
+          footer: { name: "Footer", answer: "safe", exp: "Standard internal HR sign-off." }
+        }
+      }
+    };
+
+    // User State Machine
+    let currentEmailId = 'email1';
+    let activeBlockKey = null;
+    
+    let userSelections = {
+      email1: { sender: null, subject: null, body: null, link: null, attachment: null, footer: null },
+      email2: { sender: null, subject: null, body: null, link: null, attachment: null, footer: null },
+      email3: { sender: null, subject: null, body: null, link: null, attachment: null, footer: null }
+    };
+    
+    let userAttackTypes = {
+      email1: "",
+      email2: "",
+      email3: ""
+    };
+
+    function switchEmail(targetEmail) {
+      currentEmailId = targetEmail;
+      activeBlockKey = null;
+
+      // Update Inbox UI
+      document.querySelectorAll('.inbox-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`inbox-${targetEmail}`).classList.add('active');
+
+      // Update Email Viewer UI
+      document.querySelectorAll('.email-content-wrapper').forEach(el => el.classList.remove('active'));
+      document.getElementById(`wrapper-${targetEmail}`).classList.add('active');
+
+      // Reset Analysis Panel State for new tab
+      document.getElementById('active-email-context').innerText = targetEmail === 'email1' ? 'Email 1' : targetEmail === 'email2' ? 'Email 2' : 'Email 3';
+      document.getElementById('active-element-display').innerText = "None Selected";
+      
+      document.querySelectorAll('.email-block').forEach(el => el.classList.remove('selected'));
+      
+      document.getElementById('btn-mark-safe').disabled = true;
+      document.getElementById('btn-mark-suspicious').disabled = true;
+      updateButtonStyles(null);
+
+      // Load saved dropdown state
+      document.getElementById('attack-type-select').value = userAttackTypes[targetEmail];
+    }
+
+    function selectBlock(emailId, blockKey) {
+      if(emailId !== currentEmailId) return; // Guard clause
+      
+      activeBlockKey = blockKey;
+
+      // Highlight active block visually within current email
+      const currentWrapper = document.getElementById(`wrapper-${emailId}`);
+      currentWrapper.querySelectorAll('.email-block').forEach(el => el.classList.remove('selected'));
+      document.getElementById(`${emailId}-${blockKey}`).classList.add('selected');
+
+      // Update Panel Text
+      document.getElementById('active-element-display').innerText = examData[emailId].elements[blockKey].name;
+
+      // Enable Action Buttons
+      document.getElementById('btn-mark-safe').disabled = false;
+      document.getElementById('btn-mark-suspicious').disabled = false;
+
+      // Toggle button styles based on previous state
+      updateButtonStyles(userSelections[emailId][blockKey]);
+    }
+
+    function classifyActive(choice) {
+      if (!activeBlockKey) return;
+
+      userSelections[currentEmailId][activeBlockKey] = choice;
+
+      // Update tag display on email card
+      const tagEl = document.getElementById(`tag-${currentEmailId}-${activeBlockKey}`);
+      const blockEl = document.getElementById(`${currentEmailId}-${activeBlockKey}`);
+
+      blockEl.classList.remove('status-safe', 'status-suspicious');
+
+      if (choice === 'safe') {
+        tagEl.innerText = "Marked: Safe";
+        tagEl.className = "block-tag safe";
+        blockEl.classList.add('status-safe');
+      } else if (choice === 'suspicious') {
+        tagEl.innerText = "Marked: Suspicious";
+        tagEl.className = "block-tag suspicious";
+        blockEl.classList.add('status-suspicious');
+      }
+
+      updateButtonStyles(choice);
+    }
+
+    function updateButtonStyles(currentChoice) {
+      const btnSafe = document.getElementById('btn-mark-safe');
+      const btnSuspicious = document.getElementById('btn-mark-suspicious');
+
+      btnSafe.classList.remove('safe-active');
+      btnSuspicious.classList.remove('suspicious-active');
+
+      if (currentChoice === 'safe') {
+        btnSafe.classList.add('safe-active');
+      } else if (currentChoice === 'suspicious') {
+        btnSuspicious.classList.add('suspicious-active');
+      }
+    }
+
+    function saveAttackType() {
+      userAttackTypes[currentEmailId] = document.getElementById('attack-type-select').value;
+    }
+
+    function resetSimulation() {
+      // Clear Data
+      ['email1', 'email2', 'email3'].forEach(em => {
+        userAttackTypes[em] = "";
+        Object.keys(userSelections[em]).forEach(key => {
+          userSelections[em][key] = null;
+          
+          // Reset UI blocks
+          const tag = document.getElementById(`tag-${em}-${key}`);
+          const block = document.getElementById(`${em}-${key}`);
+          if(tag) {
+            tag.innerText = "Unexamined";
+            tag.className = "block-tag";
+          }
+          if(block) {
+            block.classList.remove('selected', 'status-safe', 'status-suspicious');
+          }
+        });
+      });
+
+      // Navigate back to Email 1
+      switchEmail('email1');
+    }
+
+    function gradeSimulation() {
+      let correctAnswers = 0;
+      const totalDecisions = 21; // 3 emails * (6 elements + 1 attack type)
+      let remediationHTML = "";
+
+      ['email1', 'email2', 'email3'].forEach(em => {
+        remediationHTML += `<div class="email-results-group">`;
+        remediationHTML += `<div class="email-results-title">${examData[em].title}</div>`;
+
+        // Grade Attack Type
+        const userType = userAttackTypes[em];
+        const correctType = examData[em].correctType;
+        const isTypeCorrect = userType === correctType;
+        if (isTypeCorrect) correctAnswers++;
+
+        remediationHTML += `
+          <div class="remediation-item ${isTypeCorrect ? 'correct' : 'incorrect'}">
+            <div class="remediation-title">${isTypeCorrect ? '✅ Correct' : '❌ Incorrect'}: Attack Classification</div>
+            <div class="remediation-desc">
+              <strong>Selection:</strong> ${userType ? formatSelectText(userType) : 'None'} | <strong>Correct:</strong> ${formatSelectText(correctType)}<br>
+              <em>${examData[em].typeExplanation}</em>
+            </div>
+          </div><hr style="border-color: #475569; margin: 8px 0;">
+        `;
+
+        // Grade Elements
+        Object.keys(examData[em].elements).forEach(key => {
+          const item = examData[em].elements[key];
+          const userChoice = userSelections[em][key];
+          const isCorrect = userChoice === item.answer;
+
+          if (isCorrect) correctAnswers++;
+
+          remediationHTML += `
+            <div class="remediation-item ${isCorrect ? 'correct' : 'incorrect'}">
+              <div class="remediation-title">${isCorrect ? '✅ Correct' : '❌ Incorrect'}: ${item.name}</div>
+              <div class="remediation-desc">
+                <strong>Selection:</strong> ${userChoice ? userChoice.toUpperCase() : 'UNSELECTED'} | <strong>Correct:</strong> ${item.answer.toUpperCase()}<br>
+                ${item.exp}
+              </div>
+            </div>
+          `;
+        });
+
+        remediationHTML += `</div>`; // Close group
+      });
+
+      // Calculate Final Score
+      const finalScore = Math.round((correctAnswers / totalDecisions) * 100);
+      const scoreDisplay = document.getElementById('score-display');
+      scoreDisplay.innerText = `Score: ${finalScore}%`;
+
+      if (finalScore >= 80) {
+        scoreDisplay.className = "score-badge score-pass";
+      } else {
+        scoreDisplay.className = "score-badge score-fail";
+      }
+
+      document.getElementById('remediation-list').innerHTML = remediationHTML;
+      document.getElementById('remediation-modal').style.display = "flex";
+    }
+
+    function formatSelectText(val) {
+      const map = {
+        'spear_phishing': 'Spear Phishing',
+        'bec_whaling': 'BEC / Whaling',
+        'legitimate': 'Legitimate / Safe',
+        'vishing': 'Vishing',
+        'watering_hole': 'Watering Hole'
+      };
+      return map[val] || val;
+    }
+
+    function closeModal() {
+      document.getElementById('remediation-modal').style.display = "none";
+    }
+  </script>
+</body>
+</html>
